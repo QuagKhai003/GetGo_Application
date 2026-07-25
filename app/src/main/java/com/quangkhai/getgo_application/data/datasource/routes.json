@@ -1,0 +1,13 @@
+{
+  "/users/create": "/users",
+  "/users/:uid/update": "/users/:uid",
+  "/users/:uid/delete": "/users/:uid",
+
+  "/users/:uid/locations/:lid/update": "/locations/:lid",
+  "/users/:uid/locations/:lid/delete": "/locations/:lid",
+
+  "/users/:uid/favorites/:lid/delete": "/favorites/:lid",
+
+  "/users/:uid/friends/:fid/update": "/friends/:fid",
+  "/users/:uid/friends/:fid/delete": "/friends/:fid"
+}
