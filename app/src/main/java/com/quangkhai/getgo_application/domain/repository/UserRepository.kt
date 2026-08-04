@@ -1,5 +1,6 @@
 package com.quangkhai.getgo_application.domain.repository
 
+import com.quangkhai.getgo_application.domain.model.BillGroup
 import com.quangkhai.getgo_application.domain.model.Friend
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.model.User
@@ -29,4 +30,10 @@ interface UserRepository {
     suspend fun getFavorites(userId: String): Result<List<Location>>
     suspend fun addFavorite(userId: String, location: Location): Result<Unit>
     suspend fun deleteFavorite(userId: String, locationId: String): Result<Unit>
+
+    // Bill Group CRUD Functions (split-bill groups)
+    suspend fun getBillGroups(userId: String): Result<List<BillGroup>>
+    suspend fun addBillGroup(userId: String, group: BillGroup): Result<Unit>
+    suspend fun updateBillGroup(userId: String, groupId: String, group: BillGroup): Result<Unit>
+    suspend fun deleteBillGroup(userId: String, groupId: String): Result<Unit>
 }

@@ -12,4 +12,9 @@ sealed class GetGoRoute(val route: String) {
     object FriendList: GetGoRoute("friendList")
 
     object SplitBill: GetGoRoute("splitbill")
+
+    // one bill group; pass "new" to start a fresh group
+    object BillGroup: GetGoRoute("billGroup/{groupId}") {
+        fun of(groupId: String) = "billGroup/$groupId"
+    }
 }

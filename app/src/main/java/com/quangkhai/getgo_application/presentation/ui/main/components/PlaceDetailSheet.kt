@@ -5,21 +5,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,6 +46,8 @@ fun PlaceDetailSheet(
     onRemove: () -> Unit,
     onAddBill: () -> Unit,
     onClose: () -> Unit,
+    circleVisible: Boolean? = null,
+    onToggleCircle: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -80,9 +88,13 @@ fun PlaceDetailSheet(
                 Text(location.name, color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Text(location.address.ifBlank { "—" }, color = GetGoTheme.colors.labelColor, fontSize = 12.sp)
             }
+            if (circleVisible != null) {
+                CircleTogglePill(circleVisible, onToggleCircle)
+                Spacer(Modifier.width(8.dp))
+            }
             Text(
                 "✕",
-                color = GetGoTheme.colors.outlineElements,
+                color = GetGoTheme.colors.dangerous,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -95,7 +107,7 @@ fun PlaceDetailSheet(
             modifier = Modifier.padding(top = 12.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp)
         ) {
-            InfoRow("Coordinates", "${location.lat}, ${location.long}")
+            CoordinatesRow(location.lat, location.long)
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (isFavorite) {
@@ -110,10 +122,47 @@ fun PlaceDetailSheet(
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, color = GetGoTheme.colors.labelColor, fontSize = 13.sp)
-        Text(value, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+private fun CircleTogglePill(circleVisible: Boolean, onToggleCircle: () -> Unit) {
+    Text(
+        "Circle visibility: ${if (circleVisible) "on" else "off"}",
+        color = if (circleVisible) MaterialTheme.colorScheme.tertiary else GetGoTheme.colors.labelColor,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onToggleCircle() }
+            .padding(top = 2.dp)
+    )
+}
+
+@Composable
+private fun CoordinatesRow(lat: Double, long: Double) {
+    val clipboard = LocalClipboardManager.current
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Coordinates", color = GetGoTheme.colors.labelColor, fontSize = 13.sp)
+            Spacer(Modifier.width(8.dp))
+            Row(
+                modifier = Modifier.clickable { clipboard.setText(AnnotatedString("$lat, $long")) },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CopyIcon(tint = GetGoTheme.colors.fillElements, modifier = Modifier.size(13.dp))
+                Spacer(Modifier.width(3.dp))
+                Text("copy", color = GetGoTheme.colors.fillElements, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            }
+        }
+        Text(
+            "$lat, $long",
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 

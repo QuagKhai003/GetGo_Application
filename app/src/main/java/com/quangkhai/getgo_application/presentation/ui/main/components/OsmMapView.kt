@@ -31,6 +31,7 @@ import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.Projection
 import org.osmdroid.views.overlay.Overlay
+import org.osmdroid.views.overlay.Polyline
 
 @Composable
 fun OsmMapView(
@@ -62,6 +63,7 @@ fun OsmMapView(
     fairSpotLines: List<Location> = emptyList(),
     fitPoints: List<Pair<Double, Double>> = emptyList(),
     fitKey: Int = 0,
+    routePoints: List<Pair<Double, Double>> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -160,6 +162,10 @@ fun OsmMapView(
     val fairOverlays = remember { mutableListOf<Overlay>() }
     val fairLineColor = MaterialTheme.colorScheme.tertiary.toArgb()
     val fairRingColor = GetGoTheme.colors.outlineElements.toArgb()
+
+    // driving route overlay (current location -> destination)
+    val routeOverlays = remember { mutableListOf<Overlay>() }
+    val routeColor = MaterialTheme.colorScheme.tertiary.toArgb()
 
     LaunchedEffect(pickedLocation) {
         val place = pickedLocation
@@ -279,6 +285,24 @@ fun OsmMapView(
             val overlay = FairOverlay(spotPoint, members, maxDist, fairLineColor, fairRingColor)
             fairOverlays.add(overlay)
             mapView.overlays.add(overlay)
+        }
+        mapView.invalidate()
+    }
+
+    // draw the driving route polyline and fit it on screen
+    LaunchedEffect(routePoints) {
+        routeOverlays.forEach { mapView.overlays.remove(it) }
+        routeOverlays.clear()
+        if (routePoints.size >= 2) {
+            val geo = routePoints.map { GeoPoint(it.first, it.second) }
+            val line = Polyline().apply {
+                setPoints(geo)
+                outlinePaint.color = routeColor
+                outlinePaint.strokeWidth = 12f
+            }
+            routeOverlays.add(line)
+            mapView.overlays.add(line)
+            mapView.zoomToBoundingBox(BoundingBox.fromGeoPoints(geo), true, 120)
         }
         mapView.invalidate()
     }

@@ -3,9 +3,14 @@ package com.quangkhai.getgo_application.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.quangkhai.getgo_application.data.repository.UserSupabaseRepositoryImpl
+import com.quangkhai.getgo_application.domain.model.BillGroup
 import com.quangkhai.getgo_application.domain.model.Friend
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.model.User
+import com.quangkhai.getgo_application.domain.usecase.user.billgroup.AddBillGroupUseCase
+import com.quangkhai.getgo_application.domain.usecase.user.billgroup.DeleteBillGroupUseCase
+import com.quangkhai.getgo_application.domain.usecase.user.billgroup.GetBillGroupsUseCase
+import com.quangkhai.getgo_application.domain.usecase.user.billgroup.UpdateBillGroupUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.favorite.AddFavoriteUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.favorite.DeleteFavoriteUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.favorite.GetFavoritesUseCase
@@ -56,6 +61,11 @@ class UserViewModel : ViewModel() {
     private val getFavoritesUseCase = GetFavoritesUseCase(userRepository)
     private val getFriendsUseCase = GetFriendsUseCase(userRepository)
 
+    private val getBillGroupsUseCase = GetBillGroupsUseCase(userRepository)
+    private val addBillGroupUseCase = AddBillGroupUseCase(userRepository)
+    private val updateBillGroupUseCase = UpdateBillGroupUseCase(userRepository)
+    private val deleteBillGroupUseCase = DeleteBillGroupUseCase(userRepository)
+
     // the one logged in user - every screen reads this
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
@@ -84,11 +94,13 @@ class UserViewModel : ViewModel() {
             val locations = getLocationsUseCase(loadedUser).getOrNull() ?: emptyList()
             val favorites = getFavoritesUseCase(loadedUser).getOrNull() ?: emptyList()
             val friends = getFriendsUseCase(loadedUser).getOrNull() ?: emptyList()
+            val billGroups = getBillGroupsUseCase(loadedUser).getOrNull() ?: emptyList()
 
             val fullUser = loadedUser.copy(
                 myLocations = locations,
                 favorites = favorites,
-                friends = friends
+                friends = friends,
+                billGroups = billGroups
             )
 
             _currentUser.value = fullUser
@@ -194,7 +206,15 @@ class UserViewModel : ViewModel() {
 
         viewModelScope.launch {
             val result = addFriendUseCase(user, friendName, friendLocation)
-            handleUserResult(result)
+            val updated = result.getOrNull()
+            if (updated != null) {
+                // re-fetch friends so the new one gets its backend id (needed to toggle it)
+                val friends = getFriendsUseCase(updated).getOrNull() ?: updated.friends
+                _currentUser.value = updated.copy(friends = friends)
+                _friendResults.value = friends
+            } else {
+                handleUserResult(result)
+            }
         }
     }
 
@@ -212,6 +232,39 @@ class UserViewModel : ViewModel() {
 
         viewModelScope.launch {
             val result = deleteFriendUseCase(user, friendId)
+            handleUserResult(result)
+        }
+    }
+
+    // Bill Groups--------------------------------
+
+    fun addBillGroup(group: BillGroup) {
+        val user = _currentUser.value ?: return
+        viewModelScope.launch {
+            val result = addBillGroupUseCase(user, group)
+            val updated = result.getOrNull()
+            if (updated != null) {
+                // re-fetch so the new group gets its backend id
+                val groups = getBillGroupsUseCase(updated).getOrNull() ?: updated.billGroups
+                _currentUser.value = updated.copy(billGroups = groups)
+            } else {
+                handleUserResult(result)
+            }
+        }
+    }
+
+    fun updateBillGroup(group: BillGroup) {
+        val user = _currentUser.value ?: return
+        viewModelScope.launch {
+            val result = updateBillGroupUseCase(user, group)
+            handleUserResult(result)
+        }
+    }
+
+    fun deleteBillGroup(groupId: String) {
+        val user = _currentUser.value ?: return
+        viewModelScope.launch {
+            val result = deleteBillGroupUseCase(user, groupId)
             handleUserResult(result)
         }
     }

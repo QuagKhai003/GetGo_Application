@@ -13,12 +13,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -27,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.quangkhai.getgo_application.data.local.getCurrentLatLong
 import com.quangkhai.getgo_application.data.local.hasLocationPermission
+import com.quangkhai.getgo_application.presentation.ui.main.components.WeatherHistoryDialog
 import com.quangkhai.getgo_application.presentation.viewmodel.WeatherViewModel
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 import com.quangkhai.getgo_application.ui.theme.GetGo_ApplicationTheme
@@ -47,6 +56,8 @@ fun MenuScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val weather by weatherViewModel.weather.collectAsState()
+    val weatherHistory by weatherViewModel.history.collectAsState()
+    var showWeatherHistory by remember { mutableStateOf(false) }
 
     fun loadWeather() {
         scope.launch {
@@ -83,16 +94,16 @@ fun MenuScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            MenuCard("Let's\nGet Go", onLetsGetGo, Modifier.weight(1f), backgroundColor = GetGoTheme.colors.quaternary)
+            MenuCard("Let's\nGet Go", onLetsGetGo, Modifier.weight(1f), backgroundColor = GetGoTheme.colors.quaternary, icon = Icons.Filled.Place)
             WeatherMenuCard(
                 weather = weather,
                 onClick = {
-                    // no navigation — tap reloads the weather
                     scope.launch {
                         getCurrentLatLong(context)?.let { (lat, long) ->
-                            weatherViewModel.load(lat, long)
+                            weatherViewModel.loadHistory(lat, long)
                         }
                     }
+                    showWeatherHistory = true
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -101,16 +112,24 @@ fun MenuScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            MenuCard("Your\nFriend List", onFriendList, Modifier.weight(1f))
-            MenuCard("User\nSetting", onUserSetting, Modifier.weight(1f))
+            MenuCard("Your\nFriend List", onFriendList, Modifier.weight(1f), icon = Icons.Filled.Person)
+            MenuCard("User\nSetting", onUserSetting, Modifier.weight(1f), icon = Icons.Filled.Settings)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            MenuCard("Split\nYour Bills", onSplitBill, Modifier.weight(1f), backgroundColor = MaterialTheme.colorScheme.tertiary, textColor = MaterialTheme.colorScheme.surface)
+            MenuCard("Split\nYour Bills", onSplitBill, Modifier.weight(1f), backgroundColor = MaterialTheme.colorScheme.tertiary, textColor = MaterialTheme.colorScheme.surface, icon = Icons.Filled.ShoppingCart)
             Spacer(Modifier.weight(1f))
         }
+    }
+
+    if (showWeatherHistory) {
+        WeatherHistoryDialog(
+            weather = weather,
+            history = weatherHistory,
+            onDismiss = { showWeatherHistory = false }
+        )
     }
 }
 

@@ -3,9 +3,11 @@ package com.quangkhai.getgo_application.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.quangkhai.getgo_application.data.repository.MapOpenStreetRepositoryImpl
+import com.quangkhai.getgo_application.data.repository.RouteRepositoryImpl
 import com.quangkhai.getgo_application.data.repository.WeatherRepositoryImpl
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.model.Weather
+import com.quangkhai.getgo_application.domain.usecase.map.GetRouteUseCase
 import com.quangkhai.getgo_application.domain.usecase.map.SearchByAddressUseCase
 import com.quangkhai.getgo_application.domain.usecase.map.SearchByCoordinateUseCase
 import com.quangkhai.getgo_application.domain.usecase.weather.GetWeatherUseCase
@@ -29,6 +31,13 @@ class MapViewModel : ViewModel() {
 
     private val weatherRepository = WeatherRepositoryImpl()
     private val getWeatherUseCase = GetWeatherUseCase(weatherRepository)
+
+    private val routeRepository = RouteRepositoryImpl()
+    private val getRouteUseCase = GetRouteUseCase(routeRepository)
+
+    // the road route to draw (current location -> destination), empty when none
+    private val _route = MutableStateFlow<List<Pair<Double, Double>>>(emptyList())
+    val route: StateFlow<List<Pair<Double, Double>>> = _route.asStateFlow()
 
     private val _searchResults = MutableStateFlow<List<Location>>(emptyList())
     val searchResults: StateFlow<List<Location>> = _searchResults.asStateFlow()
@@ -134,6 +143,17 @@ class MapViewModel : ViewModel() {
     fun clearPicked() {
         _pickedLocation.value = null
         _weather.value = null
+    }
+
+    // fetch + draw the driving route from current location to a destination
+    fun fetchRoute(fromLat: Double, fromLong: Double, toLat: Double, toLong: Double) {
+        viewModelScope.launch {
+            _route.value = getRouteUseCase(fromLat, fromLong, toLat, toLong).getOrNull() ?: emptyList()
+        }
+    }
+
+    fun clearRoute() {
+        _route.value = emptyList()
     }
 
     // User drags the pin and then it convert the coordinate to address by searchByCoordinateUseCase

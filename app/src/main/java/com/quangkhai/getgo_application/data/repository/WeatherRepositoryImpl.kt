@@ -2,11 +2,13 @@ package com.quangkhai.getgo_application.data.repository
 
 import com.quangkhai.getgo_application.data.network.WeatherApi
 import com.quangkhai.getgo_application.data.network.client.OpenMeteoClient
+import com.quangkhai.getgo_application.domain.model.DayWeather
 import com.quangkhai.getgo_application.domain.model.Weather
 import com.quangkhai.getgo_application.domain.repository.WeatherRepository
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.coroutines.cancellation.CancellationException
@@ -25,6 +27,39 @@ class WeatherRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
+    }
+
+    override suspend fun getWeatherHistory(lat: Double, long: Double): Result<List<DayWeather>> {
+        return try {
+            val response = weatherApi.getWeatherHistory(lat, long)
+            Result.success(response.toDailyList())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
+        }
+    }
+
+    // the daily arrays come back column-wise (time[], max[], min[], code[]) - zip them by index
+    private fun JsonObject.toDailyList(): List<DayWeather> {
+        val daily = this["daily"]?.jsonObject ?: return emptyList()
+        val times = daily["time"]?.jsonArray ?: return emptyList()
+        val maxs = daily["temperature_2m_max"]?.jsonArray
+        val mins = daily["temperature_2m_min"]?.jsonArray
+        val codes = daily["weather_code"]?.jsonArray
+
+        val days = mutableListOf<DayWeather>()
+        for (i in 0 until times.size) {
+            days.add(
+                DayWeather(
+                    date = times[i].jsonPrimitive.content,
+                    maxC = maxs?.getOrNull(i)?.jsonPrimitive?.doubleOrNull ?: 0.0,
+                    minC = mins?.getOrNull(i)?.jsonPrimitive?.doubleOrNull ?: 0.0,
+                    weatherCode = codes?.getOrNull(i)?.jsonPrimitive?.intOrNull ?: -1
+                )
+            )
+        }
+        return days
     }
 
     // Convert Json raw response into Weather object

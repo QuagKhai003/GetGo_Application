@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.sp
 fun AppTopBar(
     title: String,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -52,8 +53,10 @@ fun AppTopBar(
                 text = title,
                 color = Color.White,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
+            if (trailing != null) trailing()
         }
     }
 }

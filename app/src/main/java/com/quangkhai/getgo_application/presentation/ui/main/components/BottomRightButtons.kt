@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 fun BottomRightButtons(
     onLocate: () -> Unit,
     onDirections: () -> Unit,
+    directionsActive: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -17,6 +18,6 @@ fun BottomRightButtons(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         GetCurLocationButton(onClick = onLocate)
-        DirectionsButton(onClick = onDirections)
+        DirectionsButton(onClick = onDirections, active = directionsActive)
     }
 }

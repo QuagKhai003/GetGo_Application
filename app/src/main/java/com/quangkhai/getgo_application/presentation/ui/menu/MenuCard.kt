@@ -5,7 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +18,7 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Column
@@ -23,6 +26,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.quangkhai.getgo_application.domain.model.Weather
+import com.quangkhai.getgo_application.presentation.ui.main.components.weatherEmoji
 import com.quangkhai.getgo_application.ui.theme.GetGo_ApplicationTheme
 
 
@@ -32,7 +36,8 @@ fun MenuCard(
     onClick: () -> Unit,
     modifier: Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
-    textColor: Color = MaterialTheme.colorScheme.onSurface
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    icon: ImageVector? = null
 ) {
     Box(
         modifier = modifier
@@ -54,6 +59,16 @@ fun MenuCard(
         contentAlignment = Alignment.BottomStart
 
     ) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = textColor,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(58.dp)
+            )
+        }
         Text(
             text = label,
             color = textColor,
@@ -93,6 +108,11 @@ fun WeatherMenuCard(
             .padding(16.dp),
         contentAlignment = Alignment.BottomStart
     ) {
+        Text(
+            text = if (weather != null) weatherEmoji(weather.weatherCode) else "🌡️",
+            fontSize = 42.sp,
+            modifier = Modifier.align(Alignment.TopEnd)
+        )
         Column {
             if (weather != null) {
                 Text(

@@ -1,6 +1,7 @@
 package com.quangkhai.getgo_application.data.repository
 
 import com.quangkhai.getgo_application.data.network.client.SupabaseClientApi
+import com.quangkhai.getgo_application.domain.model.BillGroup
 import com.quangkhai.getgo_application.domain.model.Friend
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.model.User
@@ -285,5 +286,76 @@ class UserSupabaseRepositoryImpl() : UserRepository {
         put("lat", location.lat)
         put("long", location.long)
         put("address", location.address)
+    }
+
+    // Bill Group CRUD Functions-------------------
+    // one "bill_groups" row per group; people + bills stored as JSON columns
+
+    override suspend fun getBillGroups(userId: String): Result<List<BillGroup>> {
+        return try {
+            val groups = supaDB.from("bill_groups")
+                .select { filter { eq("user_id", userId) } }
+                .decodeList<BillGroup>()
+
+            Result.success(groups)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
+        }
+    }
+
+    override suspend fun addBillGroup(userId: String, group: BillGroup): Result<Unit> {
+        return try {
+            supaDB.from("bill_groups").insert(billGroupBody(userId, group))
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
+        }
+    }
+
+    override suspend fun updateBillGroup(userId: String, groupId: String, group: BillGroup): Result<Unit> {
+        return try {
+            supaDB.from("bill_groups").update({
+                set("name", group.name)
+                set("people", Json.encodeToJsonElement(group.people))
+                set("bills", Json.encodeToJsonElement(group.bills))
+            }) {
+                filter {
+                    eq("id", groupId)
+                    eq("user_id", userId)
+                }
+            }
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
+        }
+    }
+
+    override suspend fun deleteBillGroup(userId: String, groupId: String): Result<Unit> {
+        return try {
+            supaDB.from("bill_groups").delete {
+                filter {
+                    eq("id", groupId)
+                    eq("user_id", userId)
+                }
+            }
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
+        }
+    }
+
+    private fun billGroupBody(userId: String, group: BillGroup) = buildJsonObject {
+        put("user_id", userId)
+        put("name", group.name)
+        put("people", Json.encodeToJsonElement(group.people))
+        put("bills", Json.encodeToJsonElement(group.bills))
     }
 }

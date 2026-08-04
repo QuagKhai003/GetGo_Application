@@ -57,6 +57,7 @@ import com.quangkhai.getgo_application.presentation.ui.main.components.FairSpotS
 import com.quangkhai.getgo_application.presentation.ui.main.components.FindASpotButton
 import com.quangkhai.getgo_application.presentation.ui.main.components.FriendListPill
 import com.quangkhai.getgo_application.presentation.ui.main.components.MagicCirclePill
+import com.quangkhai.getgo_application.presentation.ui.main.components.WeatherHistoryDialog
 import com.quangkhai.getgo_application.presentation.ui.main.components.WeatherPill
 import com.quangkhai.getgo_application.presentation.ui.main.components.MapSearchBar
 import com.quangkhai.getgo_application.presentation.ui.main.components.SearchResults
@@ -66,7 +67,10 @@ import com.quangkhai.getgo_application.presentation.ui.main.components.BottomLef
 import com.quangkhai.getgo_application.presentation.ui.main.components.PlaceDetailSheet
 import com.quangkhai.getgo_application.data.local.getCurrentLatLong
 import com.quangkhai.getgo_application.data.local.hasLocationPermission
+import com.quangkhai.getgo_application.domain.model.BillGroup
 import com.quangkhai.getgo_application.domain.model.Location
+import com.quangkhai.getgo_application.presentation.ui.split.AddBillDialog
+import com.quangkhai.getgo_application.presentation.ui.split.GroupPickerDialog
 import com.quangkhai.getgo_application.domain.usecase.map.CircleDiscoverUseCase
 import com.quangkhai.getgo_application.domain.usecase.map.fairCenter
 import com.quangkhai.getgo_application.domain.usecase.map.haversineMeters
@@ -91,9 +95,11 @@ fun MainScreen(
 ) {
     val searchResults by mapViewModel.searchResults.collectAsState()
     val pickedLocation by mapViewModel.pickedLocation.collectAsState()
+    val route by mapViewModel.route.collectAsState()
     val discoveredPlaces by discoverViewModel.discoveredPlaces.collectAsState()
     val discovering by discoverViewModel.discovering.collectAsState()
     val weather by weatherViewModel.weather.collectAsState()
+    val weatherHistory by weatherViewModel.history.collectAsState()
     val currentUser by userViewModel.currentUser.collectAsState()
 
     val searchState = rememberTextFieldState()
@@ -115,6 +121,10 @@ fun MainScreen(
     var pendingFairSearch by remember { mutableStateOf(false) }
     var fitPoints by remember { mutableStateOf<List<Pair<Double, Double>>>(emptyList()) }
     var fitKey by remember { mutableIntStateOf(0) }
+    // "add bill from map": the place to bill, and the group chosen to add it to
+    var billPlace by remember { mutableStateOf<Location?>(null) }
+    var billGroup by remember { mutableStateOf<BillGroup?>(null) }
+    var showWeatherHistory by remember { mutableStateOf(false) }
     // forces the first fair search onto the exact fair centre (projection not settled yet)
     var searchCenterOverride by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
@@ -227,6 +237,7 @@ fun MainScreen(
     val peekSheetHeight = 128.dp
     val fullSheetHeight = 300.dp
     val targetSheetHeight = when {
+        fairSpotActive && chosenSpot != null -> if (isSheetExpanded) fullSheetHeight else peekSheetHeight
         pickedLocation == null -> 0.dp
         isSheetExpanded -> fullSheetHeight
         else -> peekSheetHeight
@@ -291,7 +302,7 @@ fun MainScreen(
                 focusManager.clearFocus()
             },
             onPinMoved = { latitude, longitude -> mapViewModel.pinAt(latitude, longitude) },
-            onDeletePin = { mapViewModel.clearPicked() },
+            onDeletePin = { mapViewModel.clearPicked(); mapViewModel.clearRoute() },
             recenterOnPick = !fairSpotActive,
             discoverPlaces = discoveredPlaces,
             discoverCenter = circleCenter,
@@ -319,6 +330,7 @@ fun MainScreen(
             fairSpotLines = if (chosenSpot != null) tripMembers.map { it.second } else emptyList(),
             fitPoints = fitPoints,
             fitKey = fitKey,
+            routePoints = route,
             modifier = Modifier.fillMaxSize()
         )
 
@@ -361,7 +373,18 @@ fun MainScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             MagicCirclePill(onClick = dismiss { enterDiscover() })
-                            WeatherPill(weather = weather, modifier = Modifier.weight(1f))
+                            WeatherPill(
+                                weather = weather,
+                                onClick = {
+                                    scope.launch {
+                                        getCurrentLatLong(context)?.let { (lat, long) ->
+                                            weatherViewModel.loadHistory(lat, long)
+                                        }
+                                    }
+                                    showWeatherHistory = true
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
 
@@ -487,7 +510,30 @@ fun MainScreen(
                         locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     }
                 },
-                onDirections = dismiss { },
+                onDirections = dismiss {
+                    if (route.isNotEmpty()) {
+                        // a route is drawn -> the ✕ removes it
+                        mapViewModel.clearRoute()
+                    } else {
+                        // route from the user's saved location to the pin (or chosen fair spot)
+                        val dest = if (fairSpotActive) chosenSpot else pickedLocation
+                        val from = currentUser?.myLocations?.firstOrNull()
+                        if (dest == null) {
+                            android.widget.Toast.makeText(context, "Pick a location on the map first", android.widget.Toast.LENGTH_SHORT).show()
+                        } else if (from == null) {
+                            android.widget.Toast.makeText(context, "Set your saved location first", android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            if (fairSpotActive) {
+                                fairSpotActive = false
+                                chosenSpot = null
+                                circleCenter = null
+                                discoverViewModel.clearDiscovered()
+                            }
+                            mapViewModel.fetchRoute(from.lat, from.long, dest.lat, dest.long)
+                        }
+                    }
+                },
+                directionsActive = route.isNotEmpty(),
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .navigationBarsPadding()
@@ -506,12 +552,11 @@ fun MainScreen(
                 isFavorite = favorite != null,
                 onSave = { userViewModel.addFavorite(place) },
                 onRemove = { favorite?.id?.let { userViewModel.deleteFavorite(it) } },
-                onAddBill = { },
+                onAddBill = { billPlace = place },
                 onClose = { mapViewModel.clearPicked() },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp)
                     .height(sheetHeight)
             )
         }
@@ -527,33 +572,53 @@ fun MainScreen(
         }
 
         if (fairSpotActive) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-            ) {
-                val spot = chosenSpot
-                if (spot != null) {
+            val exitFair = {
+                fairSpotActive = false
+                chosenSpot = null
+                circleCenter = null
+                discoverViewModel.clearDiscovered()
+            }
+            val spot = chosenSpot
+            if (spot != null) {
+                // after a spot is picked: same as the normal place sheet, plus the circle toggle
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                ) {
                     FairMemberBox(
                         distances = tripMembers.map {
                             it.first to haversineMeters(spot.lat, spot.long, it.second.lat, it.second.long)
                         },
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                     )
+                    val favorite = currentUser?.favorites?.firstOrNull { it.lat == spot.lat && it.long == spot.long }
+                    PlaceDetailSheet(
+                        location = spot,
+                        expanded = isSheetExpanded,
+                        onExpandedChange = { isSheetExpanded = it },
+                        isFavorite = favorite != null,
+                        onSave = { userViewModel.addFavorite(spot) },
+                        onRemove = { favorite?.id?.let { userViewModel.deleteFavorite(it) } },
+                        onAddBill = { billPlace = spot },
+                        onClose = exitFair,
+                        circleVisible = circleVisible,
+                        onToggleCircle = { circleVisible = !circleVisible },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(sheetHeight)
+                    )
                 }
+            } else {
                 FairSpotSheet(
                     places = discoveredPlaces,
-                    chosen = chosenSpot,
                     loading = discovering,
                     circleVisible = circleVisible,
                     onToggleCircle = { circleVisible = !circleVisible },
-                    onClose = {
-                        fairSpotActive = false
-                        chosenSpot = null
-                        circleCenter = null
-                        discoverViewModel.clearDiscovered()
-                    },
-                    modifier = Modifier.fillMaxWidth()
+                    onClose = exitFair,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
                 )
             }
         }
@@ -611,6 +676,39 @@ fun MainScreen(
                     pendingFairSearch = true
                 },
                 onDismiss = { showCategoryDialog = false }
+            )
+        }
+
+        // "Add bill" from a place sheet: pick a group, then fill the bill (location prefilled)
+        val billLoc = billPlace
+        if (billLoc != null && billGroup == null) {
+            GroupPickerDialog(
+                groups = currentUser?.billGroups ?: emptyList(),
+                onPick = { billGroup = it },
+                onDismiss = { billPlace = null }
+            )
+        }
+        val billGrp = billGroup
+        if (billLoc != null && billGrp != null) {
+            AddBillDialog(
+                people = billGrp.people,
+                location = billLoc,
+                onAdd = { bill ->
+                    userViewModel.updateBillGroup(
+                        billGrp.copy(bills = billGrp.bills + bill.copy(id = java.util.UUID.randomUUID().toString()))
+                    )
+                    billPlace = null
+                    billGroup = null
+                },
+                onDismiss = { billPlace = null; billGroup = null }
+            )
+        }
+
+        if (showWeatherHistory) {
+            WeatherHistoryDialog(
+                weather = weather,
+                history = weatherHistory,
+                onDismiss = { showWeatherHistory = false }
             )
         }
     }

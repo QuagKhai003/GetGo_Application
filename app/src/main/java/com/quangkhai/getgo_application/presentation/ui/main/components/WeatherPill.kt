@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.quangkhai.getgo_application.domain.model.Weather
 
 @Composable
-fun WeatherPill(weather: Weather?, modifier: Modifier = Modifier) {
+fun WeatherPill(weather: Weather?, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     val label = if (weather == null) "🌡️ --°C"
         else "${weatherEmoji(weather.weatherCode)} ${weather.temperatureC.toInt()}°C"
 
@@ -28,13 +28,14 @@ fun WeatherPill(weather: Weather?, modifier: Modifier = Modifier) {
         modifier = modifier
             .clip(RoundedCornerShape(50))
             .background(MaterialTheme.colorScheme.tertiary)
+            .clickableOverMap { onClick() }
             .padding(horizontal = 16.dp, vertical = 4.dp),
         textAlign = TextAlign.Center
     )
 }
 
 // map a WMO weather code to a matching emoji
-private fun weatherEmoji(code: Int): String {
+fun weatherEmoji(code: Int): String {
     if (code == 0) return "☀️"
     if (code in 1..3) return "⛅"
     if (code == 45 || code == 48) return "🌫️"

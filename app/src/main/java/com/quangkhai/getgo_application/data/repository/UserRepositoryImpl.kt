@@ -3,6 +3,7 @@ package com.quangkhai.getgo_application.data.repository
 import android.util.Log
 import com.quangkhai.getgo_application.data.network.client.ApiClient
 import com.quangkhai.getgo_application.data.network.UserApi
+import com.quangkhai.getgo_application.domain.model.BillGroup
 import com.quangkhai.getgo_application.domain.model.Friend
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.model.User
@@ -246,4 +247,14 @@ class UserRepositoryImpl(private val userApi: UserApi = ApiClient.userApi) : Use
             Result.failure(Exception("Something went wrong"))
         }
     }
+
+    // Bill Group CRUD Functions (REST impl unused - app uses Supabase)-------
+
+    override suspend fun getBillGroups(userId: String): Result<List<BillGroup>> = TODO("Not yet implemented")
+
+    override suspend fun addBillGroup(userId: String, group: BillGroup): Result<Unit> = TODO("Not yet implemented")
+
+    override suspend fun updateBillGroup(userId: String, groupId: String, group: BillGroup): Result<Unit> = TODO("Not yet implemented")
+
+    override suspend fun deleteBillGroup(userId: String, groupId: String): Result<Unit> = TODO("Not yet implemented")
 }

@@ -9,8 +9,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.quangkhai.getgo_application.data.local.SessionManager
 import com.quangkhai.getgo_application.presentation.ui.auth.LoginScreen
 import com.quangkhai.getgo_application.presentation.ui.auth.RegisterScreen
@@ -19,6 +21,7 @@ import com.quangkhai.getgo_application.presentation.ui.menu.MenuScreen
 import com.quangkhai.getgo_application.presentation.ui.intro.SplashScreen
 import com.quangkhai.getgo_application.presentation.ui.friend.FriendListScreen
 import com.quangkhai.getgo_application.presentation.ui.setting.UserSettingScreen
+import com.quangkhai.getgo_application.presentation.ui.split.BillGroupScreen
 import com.quangkhai.getgo_application.presentation.ui.split.SplitBillScreen
 import com.quangkhai.getgo_application.presentation.viewmodel.UserViewModel
 
@@ -132,7 +135,21 @@ fun GetGoNavGraph(navController: NavHostController) {
 
         composable(GetGoRoute.SplitBill.route) {
             SplitBillScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                userViewModel = userViewModel,
+                onOpenGroup = { groupId -> navController.navigate(GetGoRoute.BillGroup.of(groupId)) }
+            )
+        }
+
+        composable(
+            GetGoRoute.BillGroup.route,
+            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: "new"
+            BillGroupScreen(
+                groupId = groupId,
+                onBack = { navController.popBackStack() },
+                userViewModel = userViewModel
             )
         }
     }

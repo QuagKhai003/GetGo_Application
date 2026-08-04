@@ -17,6 +17,8 @@ data class User (
 
     val friends: List<Friend> = emptyList(),
 
-    val favorites: List<Location> = emptyList()
+    val favorites: List<Location> = emptyList(),
+
+    val billGroups: List<BillGroup> = emptyList()
 
 )
