@@ -21,6 +21,7 @@ import com.quangkhai.getgo_application.domain.usecase.user.location.UpdateLocati
 import com.quangkhai.getgo_application.domain.usecase.user.CreateUserUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.DeleteUserUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.GetUserByIdUseCase
+import com.quangkhai.getgo_application.domain.usecase.user.LoginUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.UpdateUserUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +36,7 @@ class UserViewModel : ViewModel() {
     private val userRepository = UserSupabaseRepositoryImpl()
 
     private val getUserByIdUseCase = GetUserByIdUseCase(userRepository)
+    private val loginUseCase = LoginUseCase(userRepository)
     private val createUserUseCase = CreateUserUseCase(userRepository)
     private val updateUserUseCase = UpdateUserUseCase(userRepository)
     private val searchFriendUseCase = SearchFriendUseCase()
@@ -95,6 +97,13 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun login(username: String, password: String) {
+        viewModelScope.launch {
+            val result = loginUseCase(username, password)
+            handleUserResult(result)
+        }
+    }
+
     fun register(name: String, username: String, password: String) {
         viewModelScope.launch {
             val result = createUserUseCase(name, username, password)
@@ -108,6 +117,15 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             val edited = user.copy(name = name, username = username)
             val result = updateUserUseCase(edited)
+            handleUserResult(result)
+        }
+    }
+
+    fun changePassword(newPassword: String) {
+        val user = _currentUser.value ?: return
+
+        viewModelScope.launch {
+            val result = updateUserUseCase(user.copy(password = newPassword))
             handleUserResult(result)
         }
     }
@@ -196,6 +214,57 @@ class UserViewModel : ViewModel() {
             val result = deleteFriendUseCase(user, friendId)
             handleUserResult(result)
         }
+    }
+
+    // pick-intent: remember why the map picker was opened, then act on the picked location
+    private var pendingFriendName: String? = null
+    private var pendingEditFriend: Friend? = null
+    private var pendingMyAddress = false
+
+    fun startAddFriend(name: String) {
+        pendingFriendName = name
+        pendingEditFriend = null
+        pendingMyAddress = false
+    }
+
+    fun startEditFriend(friend: Friend) {
+        pendingEditFriend = friend
+        pendingFriendName = null
+        pendingMyAddress = false
+    }
+
+    fun startSetMyAddress() {
+        pendingMyAddress = true
+        pendingFriendName = null
+        pendingEditFriend = null
+    }
+
+    fun onLocationPicked(location: Location) {
+        val editFriend = pendingEditFriend
+        val addName = pendingFriendName
+        val name = location.name.ifBlank { location.address }
+
+        if (pendingMyAddress) {
+            val existing = _currentUser.value?.myLocations?.firstOrNull()
+            if (existing != null) {
+                updateLocation(existing.copy(name = name, lat = location.lat, long = location.long, address = location.address))
+            } else {
+                addLocation(name, location.lat, location.long, location.address)
+            }
+        } else if (editFriend != null) {
+            updateFriendLocation(editFriend, location)
+        } else if (addName != null) {
+            addFriend(addName, name, location.lat, location.long, location.address)
+        }
+
+        pendingFriendName = null
+        pendingEditFriend = null
+        pendingMyAddress = false
+    }
+
+    fun logout() {
+        _currentUser.value = null
+        _friendResults.value = emptyList()
     }
 
     // ------------------------------------------

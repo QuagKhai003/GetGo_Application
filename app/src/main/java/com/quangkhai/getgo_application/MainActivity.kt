@@ -4,7 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.quangkhai.getgo_application.presentation.ui.UserTestScreen
+import androidx.navigation.compose.rememberNavController
+import com.quangkhai.getgo_application.presentation.navigation.GetGoNavGraph
 import com.quangkhai.getgo_application.ui.theme.GetGo_ApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +14,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             GetGo_ApplicationTheme {
-                UserTestScreen()
+                val navController = rememberNavController()
+                GetGoNavGraph(navController = navController)
             }
         }
     }

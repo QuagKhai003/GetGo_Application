@@ -1,6 +1,7 @@
 package com.quangkhai.getgo_application.data.repository
 
 import android.util.Log
+import com.quangkhai.getgo_application.data.network.client.ApiClient
 import com.quangkhai.getgo_application.data.network.UserApi
 import com.quangkhai.getgo_application.domain.model.Friend
 import com.quangkhai.getgo_application.domain.model.Location
@@ -25,6 +26,13 @@ class UserRepositoryImpl(private val userApi: UserApi = ApiClient.userApi) : Use
             Log.e("UserRepo", "getUserById($userId) failed", e)
             Result.failure(Exception("Something went wrong"))
         }
+    }
+
+    override suspend fun login(
+        username: String,
+        password: String
+    ): Result<User> {
+        TODO("Not yet implemented")
     }
 
     override suspend fun createUser(user: User): Result<User> {

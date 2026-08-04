@@ -9,6 +9,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -33,6 +37,30 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+data class CustomColors(
+    val quaternary: Color,
+    val dangerous: Color,
+    val labelColor: Color,
+    val outlineElements: Color,
+    val fillElements: Color
+)
+
+val LocalCustomColors = staticCompositionLocalOf {
+    CustomColors(
+        quaternary = Color.Unspecified,
+        dangerous = Color.Unspecified,
+        labelColor = Color.Unspecified,
+        outlineElements = Color.Unspecified,
+        fillElements = Color.Unspecified
+    )
+}
+
+private val BrandGreenColorScheme = lightColorScheme(
+    primary = BrandGreen,
+    secondary = BrandGreenPastel,
+    tertiary = BrandBlue,
+)
+
 @Composable
 fun GetGo_ApplicationTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -40,6 +68,15 @@ fun GetGo_ApplicationTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val customColors = CustomColors(
+        quaternary = BrandYellowPastel,
+        dangerous = BrandRed,
+        labelColor = LabelGrey,
+        outlineElements = OutlineGrey,
+        fillElements = BlueFill
+    )
+
+    /*
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
@@ -49,10 +86,21 @@ fun GetGo_ApplicationTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+    */
+    val colorScheme = BrandGreenColorScheme
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalCustomColors provides customColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
+}
+
+object GetGoTheme {
+    val colors: CustomColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalCustomColors.current
 }

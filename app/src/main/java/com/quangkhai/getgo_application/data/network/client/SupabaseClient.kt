@@ -1,4 +1,4 @@
-package com.quangkhai.getgo_application.data.repository
+package com.quangkhai.getgo_application.data.network.client
 
 import com.quangkhai.getgo_application.BuildConfig
 import io.github.jan.supabase.createSupabaseClient

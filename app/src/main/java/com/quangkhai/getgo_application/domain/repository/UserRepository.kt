@@ -8,6 +8,7 @@ interface UserRepository {
 
     // User CRUD Function
     suspend fun getUserById(userId: String): Result<User>
+    suspend fun login(username: String, password: String): Result<User>
     suspend fun createUser(user: User): Result<User> // Register
     suspend fun updateUser(user: User): Result<Unit>
     suspend fun deleteUser(userId: String): Result<Unit>

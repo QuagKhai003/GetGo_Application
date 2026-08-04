@@ -1,0 +1,83 @@
+package com.quangkhai.getgo_application.domain.usecase.map
+
+import kotlin.math.abs
+import kotlin.math.asin
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
+
+// straight-line (as-the-crow-flies) distance between two coordinates, in metres
+fun haversineMeters(lat1: Double, long1: Double, lat2: Double, long2: Double): Double {
+    val earthRadius = 6371000.0
+    val dLat = Math.toRadians(lat2 - lat1)
+    val dLong = Math.toRadians(long2 - long1)
+    val a = sin(dLat / 2).pow(2) +
+        cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(dLong / 2).pow(2)
+    return 2 * earthRadius * asin(sqrt(a))
+}
+
+// the fair meeting centre = centre of the smallest circle that encloses everyone
+// (minimises the WORST member's travel). Computed on lat/long in a metre-scaled
+// plane (longitude * cos(lat)). Brute force over the boundary pairs/triples that
+// can define the minimum enclosing circle - fine for a small group.
+fun fairCenter(points: List<Pair<Double, Double>>): Pair<Double, Double> {
+    if (points.isEmpty()) return 0.0 to 0.0
+    if (points.size == 1) return points[0]
+
+    val refLat = points.map { it.first }.average()
+    val cosRef = cos(Math.toRadians(refLat))
+    val xs = points.map { it.second * cosRef }   // planar x (metre-proportional)
+    val ys = points.map { it.first }             // planar y
+    val n = points.size
+
+    fun enclosesAll(cx: Double, cy: Double, r2: Double): Boolean {
+        for (i in 0 until n) {
+            val dx = xs[i] - cx
+            val dy = ys[i] - cy
+            if (dx * dx + dy * dy > r2 + 1e-12) return false
+        }
+        return true
+    }
+
+    var bestCx = xs.average()
+    var bestCy = ys.average()
+    var bestR2 = Double.MAX_VALUE
+
+    // any pair as a diameter
+    for (i in 0 until n) {
+        for (j in i + 1 until n) {
+            val cx = (xs[i] + xs[j]) / 2
+            val cy = (ys[i] + ys[j]) / 2
+            val dx = xs[i] - cx
+            val dy = ys[i] - cy
+            val r2 = dx * dx + dy * dy
+            if (r2 < bestR2 && enclosesAll(cx, cy, r2)) {
+                bestCx = cx; bestCy = cy; bestR2 = r2
+            }
+        }
+    }
+
+    // any triple's circumcircle
+    for (i in 0 until n) {
+        for (j in i + 1 until n) {
+            for (k in j + 1 until n) {
+                val d = 2 * (xs[i] * (ys[j] - ys[k]) + xs[j] * (ys[k] - ys[i]) + xs[k] * (ys[i] - ys[j]))
+                if (abs(d) < 1e-12) continue  // collinear
+                val ai = xs[i] * xs[i] + ys[i] * ys[i]
+                val aj = xs[j] * xs[j] + ys[j] * ys[j]
+                val ak = xs[k] * xs[k] + ys[k] * ys[k]
+                val cx = (ai * (ys[j] - ys[k]) + aj * (ys[k] - ys[i]) + ak * (ys[i] - ys[j])) / d
+                val cy = (ai * (xs[k] - xs[j]) + aj * (xs[i] - xs[k]) + ak * (xs[j] - xs[i])) / d
+                val dx = xs[i] - cx
+                val dy = ys[i] - cy
+                val r2 = dx * dx + dy * dy
+                if (r2 < bestR2 && enclosesAll(cx, cy, r2)) {
+                    bestCx = cx; bestCy = cy; bestR2 = r2
+                }
+            }
+        }
+    }
+
+    return bestCy to (bestCx / cosRef)
+}

@@ -52,6 +52,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -75,6 +76,16 @@ dependencies {
 
 
     implementation("androidx.navigation:navigation-compose:2.9.2")
+
+    // osmdroid - the OpenStreetMap map view
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
+
+    // device location (FusedLocationProviderClient)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    // composable icon
+    implementation("com.composables:icons-material-symbols-outlined-android:2.2.1")
+    implementation("com.composables:icons-material-symbols-outlined-filled-android:2.2.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)

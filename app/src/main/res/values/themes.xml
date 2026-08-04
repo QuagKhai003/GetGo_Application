@@ -7,10 +7,14 @@
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorSecondaryVariant">@color/teal_200</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Green launch splash so it blends into the intro screen. -->
+        <item name="android:windowBackground">@color/brand_green</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/brand_green</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/get_go_logo</item>
         <!-- Customize your theme here. -->
     </style>
 </resources>

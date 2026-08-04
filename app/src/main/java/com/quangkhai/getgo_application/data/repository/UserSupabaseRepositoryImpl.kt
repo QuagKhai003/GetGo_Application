@@ -1,10 +1,10 @@
 package com.quangkhai.getgo_application.data.repository
 
+import com.quangkhai.getgo_application.data.network.client.SupabaseClientApi
 import com.quangkhai.getgo_application.domain.model.Friend
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.model.User
 import com.quangkhai.getgo_application.domain.repository.UserRepository
-import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -12,9 +12,9 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import kotlin.coroutines.cancellation.CancellationException
 
-class UserSupabaseRepositoryImpl(
-    private val supaDB: SupabaseClient = SupabaseClientApi.supaClientApi
-) : UserRepository {
+class UserSupabaseRepositoryImpl() : UserRepository {
+
+    private val supaDB = SupabaseClientApi.supaClientApi
 
     // User CRUD Function--------------------------
 
@@ -32,7 +32,30 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
+        }
+    }
+
+    override suspend fun login(username: String, password: String): Result<User> {
+        return try {
+            val user = supaDB.from("users")
+                .select {
+                    filter {
+                        eq("username", username)
+                        eq("password", password)
+                    }
+                }
+                .decodeSingleOrNull<User>()
+
+            if (user == null) {
+                Result.failure(Exception("Wrong username or password"))
+            } else {
+                Result.success(user)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -52,7 +75,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -60,19 +83,17 @@ class UserSupabaseRepositoryImpl(
         val uid = user.id ?: return Result.failure(Exception("User has no id"))
 
         return try {
-            supaDB.from("users").update(
-                {
+            supaDB.from("users").update({
                     set("name", user.name)
                     set("username", user.username)
                     set("password", user.password)
-                }
-            ) { filter { eq("id", uid) } }
+            }) { filter { eq("id", uid) } }
 
             Result.success(Unit)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -83,7 +104,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -99,32 +120,29 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
     override suspend fun addFriend(userId: String, friend: Friend): Result<Unit> {
         return try {
-            supaDB.from("friends").insert(
-                buildJsonObject {
-                    put("user_id", userId)
-                    put("name", friend.name)
-                    put("location", Json.encodeToJsonElement(friend.location))
-                }
-            )
+            supaDB.from("friends").insert(buildJsonObject {
+                put("user_id", userId)
+                put("name", friend.name)
+                put("location", Json.encodeToJsonElement(friend.location))
+            })
             Result.success(Unit)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
     override suspend fun updateFriendLocation(userId: String, friendId: String, friend: Friend): Result<Unit> {
         return try {
-            supaDB.from("friends").update(
-                { set("location", friend.location) }
-            ) {
+            // From the friend table, update location collumn with new location object from friend.location
+            supaDB.from("friends").update({ set("location", friend.location) }) {
                 filter {
                     eq("id", friendId)
                     eq("user_id", userId)
@@ -134,7 +152,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -150,7 +168,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -166,7 +184,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -177,20 +195,18 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
     override suspend fun updateLocation(userId: String, locationId: String, location: Location): Result<Unit> {
         return try {
-            supaDB.from("locations").update(
-                {
+            supaDB.from("locations").update({
                     set("name", location.name)
                     set("lat", location.lat)
                     set("long", location.long)
                     set("address", location.address)
-                }
-            ) {
+            }) {
                 filter {
                     eq("id", locationId)
                     eq("user_id", userId)
@@ -200,7 +216,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -216,7 +232,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -232,7 +248,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -243,7 +259,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 
@@ -259,7 +275,7 @@ class UserSupabaseRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.failure(Exception("Something went wrong"))
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
     }
 

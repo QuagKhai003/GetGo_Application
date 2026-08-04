@@ -7,8 +7,6 @@ data class Map (
 
     val id: String,
 
-    val locationNode: List<Location>,
-
     val category: List<Category>?
 
 )

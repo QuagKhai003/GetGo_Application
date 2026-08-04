@@ -11,6 +11,10 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Green launch splash so it blends into the intro screen. -->
+        <item name="android:windowBackground">@color/brand_green</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/brand_green</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/get_go_logo</item>
         <!-- Customize your theme here. -->
     </style>
 </resources>
