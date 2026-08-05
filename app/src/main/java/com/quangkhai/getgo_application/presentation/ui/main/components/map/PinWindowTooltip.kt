@@ -80,7 +80,7 @@ class PinWindowTooltip(
                 tag = TAG_CLOSE
                 text = "✕"
                 setTextColor(Color.WHITE)
-                textSize = 11f
+                textSize = 13f
                 gravity = Gravity.CENTER
                 background = ShapeDrawable(OvalShape()).apply {
                     paint.color = Color.parseColor("#E11D26")

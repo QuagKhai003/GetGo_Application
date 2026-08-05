@@ -8,6 +8,8 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 
 /**
+ * Claude opus 4.8 Generate Code
+ *
  * A tap handler for buttons drawn ON TOP of the osmdroid map.
  *
  * The map is an embedded Android View (via AndroidView). It claims touch events
