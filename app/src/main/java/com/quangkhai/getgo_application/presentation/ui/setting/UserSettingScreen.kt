@@ -26,20 +26,31 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.Manifest
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
+import com.quangkhai.getgo_application.data.local.getCurrentLatLong
+import com.quangkhai.getgo_application.data.local.hasLocationPermission
+import com.quangkhai.getgo_application.presentation.viewmodel.MapViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.UserViewModel
 import com.quangkhai.getgo_application.presentation.ui.friend.components.PickLocationSheet
 import com.quangkhai.getgo_application.presentation.ui.shared.AppCard
@@ -55,9 +66,14 @@ import com.quangkhai.getgo_application.ui.theme.GetGo_ApplicationTheme
 fun UserSettingScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit,
-    userViewModel: UserViewModel = viewModel()
+    userViewModel: UserViewModel = viewModel(),
+    mapViewModel: MapViewModel = viewModel()
 ) {
     val user by userViewModel.currentUser.collectAsState()
+    val picked by mapViewModel.pickedLocation.collectAsState()
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var showProfileDialog by remember { mutableStateOf(false) }
     var editName by remember { mutableStateOf("") }
@@ -65,6 +81,33 @@ fun UserSettingScreen(
     var showPasswordDialog by remember { mutableStateOf(false) }
     var newPassword by remember { mutableStateOf("") }
     var showPicker by remember { mutableStateOf(false) }
+    var showAddressChoice by remember { mutableStateOf(false) }
+    var autoPending by remember { mutableStateOf(false) }   // waiting for pinAt to reverse-geocode
+
+    // when the auto reverse-geocode lands, save it as the user's address
+    LaunchedEffect(picked) {
+        if (autoPending && picked != null) {
+            autoPending = false
+            userViewModel.startSetMyAddress()
+            userViewModel.onLocationPicked(picked!!)
+        }
+    }
+
+    fun autoSetAddress() {
+        scope.launch {
+            val point = getCurrentLatLong(context)
+            if (point == null) {
+                Toast.makeText(context, "Couldn't get your location.", Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            autoPending = true
+            mapViewModel.pinAt(point.first, point.second)
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> if (granted) autoSetAddress() }
 
     Box(modifier = Modifier.fillMaxSize()) {
     Column(
@@ -123,10 +166,7 @@ fun UserSettingScreen(
                         emoji = "📍",
                         label = "Your address",
                         trailing = user?.location?.address ?: "—",
-                        onClick = {
-                            userViewModel.startSetMyAddress()
-                            showPicker = true
-                        }
+                        onClick = { showAddressChoice = true }
                     )
                     RowDivider()
                     SettingRow(
@@ -178,6 +218,28 @@ fun UserSettingScreen(
                 showPicker = false
             },
             onDismiss = { showPicker = false }
+        )
+    }
+
+    if (showAddressChoice) {
+        AlertDialog(
+            onDismissRequest = { showAddressChoice = false },
+            title = { Text("Your address") },
+            text = { Text("Set it yourself, or use your current location.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showAddressChoice = false
+                    if (hasLocationPermission(context)) autoSetAddress()
+                    else permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                }) { Text("Use current location") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showAddressChoice = false
+                    userViewModel.startSetMyAddress()
+                    showPicker = true
+                }) { Text("Set manually") }
+            }
         )
     }
 
