@@ -2,7 +2,7 @@ package com.quangkhai.getgo_application.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.quangkhai.getgo_application.data.repository.MapOpenStreetRepositoryImpl
+import com.quangkhai.getgo_application.data.repository.map.GoogleMapRepositoryImpl
 import com.quangkhai.getgo_application.data.repository.LocationPathRouteRepositoryImpl
 import com.quangkhai.getgo_application.data.repository.WeatherRepositoryImpl
 import com.quangkhai.getgo_application.domain.model.Location
@@ -25,8 +25,8 @@ import kotlin.time.Duration.Companion.milliseconds
 @OptIn(FlowPreview::class)
 class MapViewModel : ViewModel() {
 
-    // Open Street Map Repository Implementation
-    private val mapRepository = MapOpenStreetRepositoryImpl()
+    // Map Repository Implementation
+    private val mapRepository = GoogleMapRepositoryImpl() // was MapOpenStreetRepositoryImpl()
     private val searchByAddressUseCase = SearchByAddressUseCase(mapRepository)
     private val searchByCoordinateUseCase = SearchByCoordinateUseCase(mapRepository)
 
@@ -140,7 +140,10 @@ class MapViewModel : ViewModel() {
         viewModelScope.launch {
             val resolved = searchByCoordinateUseCase(place.lat, place.long).getOrNull()
             if (resolved != null) {
+                // a tapped point (no id) has a placeholder name -> take the resolved name; POIs keep theirs
+                val name = if (place.id == null) resolved.name.ifBlank { place.name } else place.name
                 _pickedLocation.value = place.copy(
+                    name = name,
                     address = resolved.address.ifBlank { resolved.name }
                 )
             }

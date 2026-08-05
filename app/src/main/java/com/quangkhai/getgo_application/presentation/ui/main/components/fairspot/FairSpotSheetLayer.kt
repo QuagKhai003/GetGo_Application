@@ -30,6 +30,7 @@ fun FairSpotSheetLayer(
     onRemoveFavorite: (String) -> Unit,
     onAddBill: (Location) -> Unit,
     onClose: () -> Unit,
+    pickOwnArea: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val spot = chosen
@@ -61,6 +62,7 @@ fun FairSpotSheetLayer(
             circleVisible = circleVisible,
             onToggleCircle = onToggleCircle,
             onClose = onClose,
+            pickOwnArea = pickOwnArea,
             modifier = modifier.fillMaxWidth()
         )
     }

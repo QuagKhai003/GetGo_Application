@@ -2,8 +2,7 @@ package com.quangkhai.getgo_application.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.quangkhai.getgo_application.data.repository.GooglePlacesDiscoverRepositoryImpl
-import com.quangkhai.getgo_application.data.repository.MagicCircleDiscoverRepositoryImpl
+import com.quangkhai.getgo_application.data.repository.circlediscovery.GooglePlacesDiscoverRepositoryImpl
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.usecase.map.MagicCircleDiscoverUseCase
 import kotlinx.coroutines.Job
@@ -15,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class MagicCircleDiscoverViewModel : ViewModel() {
 
-    private val magicCircleDiscoverRepository = GooglePlacesDiscoverRepositoryImpl()
+    private val magicCircleDiscoverRepository = GooglePlacesDiscoverRepositoryImpl() // was MagicCircleDiscoverRepositoryImpl()
     private val magicCircleDiscoverUseCase = MagicCircleDiscoverUseCase(magicCircleDiscoverRepository)
 
     private val _discoveredPlaces = MutableStateFlow<List<Location>>(emptyList())

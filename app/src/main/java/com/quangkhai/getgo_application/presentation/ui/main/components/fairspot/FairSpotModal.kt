@@ -29,6 +29,9 @@ import com.quangkhai.getgo_application.presentation.ui.shared.PillButton
 import com.quangkhai.getgo_application.presentation.ui.shared.PillStyle
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 
+// Claude Opus 4.8 generated code for open up modal after category dialog to choose 2 modes:
+// 1. Minium enclosing circle search arround fair centre then you could manually circle search
+// 2. Tap a random spot on the map or manually search by the circle on the map (with chosen categories before)
 @Composable
 fun FairSpotModal(
     friendNames: List<String>,

@@ -5,6 +5,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,6 +43,8 @@ import com.quangkhai.getgo_application.presentation.ui.main.components.fairspot.
 import com.quangkhai.getgo_application.presentation.ui.main.components.fairspot.FairSpotMapLayer
 import com.quangkhai.getgo_application.presentation.ui.main.components.fairspot.FairSpotSheetLayer
 import com.quangkhai.getgo_application.presentation.ui.main.components.fairspot.FindASpotButton
+import com.quangkhai.getgo_application.presentation.ui.main.components.fact.BoredSwitchCircle
+import com.quangkhai.getgo_application.presentation.ui.main.components.fact.FactModal
 import com.quangkhai.getgo_application.presentation.ui.main.components.weather.WeatherHistoryDialog
 import com.quangkhai.getgo_application.presentation.ui.main.components.placedetail.MapAddBillFlow
 import com.quangkhai.getgo_application.presentation.ui.main.components.map.MapTopBar
@@ -55,6 +59,7 @@ import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.usecase.map.MagicCircleDiscoverUseCase
 import com.quangkhai.getgo_application.domain.usecase.map.fairCenter
 import com.quangkhai.getgo_application.presentation.viewmodel.MagicCircleDiscoverViewModel
+import com.quangkhai.getgo_application.presentation.viewmodel.FactViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.MapViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.UserViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.WeatherViewModel
@@ -70,54 +75,61 @@ fun MainScreen(
     mapViewModel: MapViewModel = viewModel(),
     magicCircleDiscoverViewModel: MagicCircleDiscoverViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
-    weatherViewModel: WeatherViewModel = viewModel()
+    weatherViewModel: WeatherViewModel = viewModel(),
+    factViewModel: FactViewModel = viewModel()
 ) {
-    val searchResults by mapViewModel.searchResults.collectAsState()
-    val pickedLocation by mapViewModel.pickedLocation.collectAsState()
-    val route by mapViewModel.routePath.collectAsState()
-    val discoveredPlaces by magicCircleDiscoverViewModel.discoveredPlaces.collectAsState()
-    val discovering by magicCircleDiscoverViewModel.discovering.collectAsState()
-    val weather by weatherViewModel.weather.collectAsState()
-    val weatherHistory by weatherViewModel.history.collectAsState()
-    val currentUser by userViewModel.currentUser.collectAsState()
+    val searchResults by mapViewModel.searchResults.collectAsState()      // live search results list
+    val pickedLocation by mapViewModel.pickedLocation.collectAsState()    // place shown in the bottom sheet
+    val route by mapViewModel.routePath.collectAsState()                  // road path points to draw
+    val discoveredPlaces by magicCircleDiscoverViewModel.discoveredPlaces.collectAsState()  // POIs from the circle search
+    val discovering by magicCircleDiscoverViewModel.discovering.collectAsState()            // true while a search runs
+    val weather by weatherViewModel.weather.collectAsState()              // current weather for the picked place
+    val weatherHistory by weatherViewModel.history.collectAsState()       // past hours for the weather dialog
+    val currentUser by userViewModel.currentUser.collectAsState()         // logged-in user (friends, location, favorites)
+    val fact by factViewModel.fact.collectAsState()                       // "I'm Feeling Bored" fun fact
 
-    val searchState = rememberTextFieldState()
+    val searchState = rememberTextFieldState()                            // text in the search bar
     val context = LocalContext.current
-    val prefs = remember { PrefManager(context) }
-    var isMenuOpen by remember { mutableStateOf(false) }
-    var isSheetExpanded by remember { mutableStateOf(false) }
-    var favoritesActive by remember { mutableStateOf(false) }
+    val prefs = remember { PrefManager(context) }                         // saved toggles
+    var isMenuOpen by remember { mutableStateOf(false) }                  // side menu open
+    var isSheetExpanded by remember { mutableStateOf(false) }             // bottom sheet peek vs full
+    var favoritesActive by remember { mutableStateOf(false) }             // show favorite star markers
+
     // remembered across app restarts via PrefManager
-    var myLocationActive by remember { mutableStateOf(prefs.getMyLocationActive()) }
-    val checkedFriendIds = remember { mutableStateListOf<String>().apply { addAll(prefs.getCheckedFriends()) } }
-    var showFairSpotModal by remember { mutableStateOf(false) }
-    var showCategoryDialog by remember { mutableStateOf(false) }
-    var fairSpotActive by remember { mutableStateOf(false) }
+    var myLocationActive by remember { mutableStateOf(prefs.getMyLocationActive()) }        // show my saved location marker
+    val checkedFriendIds = remember { mutableStateListOf<String>().apply { addAll(prefs.getCheckedFriends()) } }  // friends ticked for the trip
+    var showFairSpotModal by remember { mutableStateOf(false) }           // the "Calculate Fair Spot" dialog
+
+    // "I'm Feeling Bored" mode toggle for the Find A Spot button
+    var boredMode by remember { mutableStateOf(false) }
+    var showCategoryDialog by remember { mutableStateOf(false) }          // the pick-categories dialog
+    var fairSpotActive by remember { mutableStateOf(false) }              // fair-spot flow running
+
     // true = user positions the search circle themselves; false = auto fair-centre
     var pickOwnArea by remember { mutableStateOf(false) }
-    var chosenSpot by remember { mutableStateOf<Location?>(null) }
-    var userLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
-    var fairTerms by remember { mutableStateOf("") }
-    var fairSearchCenter by remember { mutableStateOf<Pair<Double, Double>?>(null) }
-    var circleVisible by remember { mutableStateOf(true) }
-    var recenterZoom by remember { mutableStateOf(16.0) }
-    var recenterInstant by remember { mutableStateOf(false) }
-    var pendingFairSearch by remember { mutableStateOf(false) }
+    var chosenSpot by remember { mutableStateOf<Location?>(null) }        // the fair spot the user tapped
+    var userLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }  // your live location (for spider lines)
+    var fairTerms by remember { mutableStateOf("") }                      // category filters for the fair search
+    var fairSearchCenter by remember { mutableStateOf<Pair<Double, Double>?>(null) }  // geo centre the fair search ran at
+    var circleVisible by remember { mutableStateOf(true) }               // show/hide the search circle
+    var recenterZoom by remember { mutableStateOf(16.0) }               // zoom for the next recenter
+    var recenterInstant by remember { mutableStateOf(false) }            // jump vs animate on recenter
+    var pendingFairSearch by remember { mutableStateOf(false) }          // waiting for the map to recenter before the first fair search
     // "add bill from map": the place to bill, and the group chosen to add it to
     var billPlace by remember { mutableStateOf<Location?>(null) }
     var billGroup by remember { mutableStateOf<BillGroup?>(null) }
-    var showWeatherHistory by remember { mutableStateOf(false) }
+    var showWeatherHistory by remember { mutableStateOf(false) }         // the weather history dialog
     // forces the first fair search onto the exact fair centre (projection not settled yet)
     var searchCenterOverride by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
     // --- circle discovery state ---
-    var discoverMode by remember { mutableStateOf(false) }
-    var discoverTrigger by remember { mutableIntStateOf(0) }
-    var discoverTerm by remember { mutableStateOf("") }
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
-    var circleCenter by remember { mutableStateOf<Offset?>(null) }
-    var isDraggingCircle by remember { mutableStateOf(false) }
-    val selectedTerms = remember { mutableStateListOf<String>() }
+    var discoverMode by remember { mutableStateOf(false) }               // magic-circle discover running
+    var discoverTrigger by remember { mutableIntStateOf(0) }             // bump to re-run the search
+    var discoverTerm by remember { mutableStateOf("") }                  // categories for the circle search
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }       // map area size in px (for circle math)
+    var circleCenter by remember { mutableStateOf<Offset?>(null) }       // circle position on screen
+    var isDraggingCircle by remember { mutableStateOf(false) }           // user dragging the circle
+    val selectedTerms = remember { mutableStateListOf<String>() }        // chosen categories in the dialog
 
     // shared circle-drag handlers (used by both the fair-spot and magic-circle layers)
     val startCircleDrag = { isDraggingCircle = true }
@@ -165,6 +177,7 @@ fun MainScreen(
         magicCircleDiscoverViewModel.clearDiscovered()
     }
 
+    // Adapted Claude Opus 4.8 Generated code for marking and repostioning current location
     fun locateUser(recenter: Boolean) {
         scope.launch {
             val currentLocation = getCurrentLatLong(context)
@@ -231,6 +244,11 @@ fun MainScreen(
             .collect { mapViewModel.onQueryChange(it) }
     }
 
+    // in pick-a-location, the tapped place (resolved by the map view model) is the chosen spot
+    LaunchedEffect(pickedLocation) {
+        if (fairSpotActive && pickOwnArea) pickedLocation?.let { chosenSpot = it }
+    }
+
     // when an AUTO fair-spot search finishes, recenter the map on the circle + snap it to screen centre.
     // skip for pick-your-own-area: the user placed the circle at their own zoom, so leave the map alone.
     LaunchedEffect(discovering) {
@@ -243,13 +261,12 @@ fun MainScreen(
         }
     }
 
-    val peekSheetHeight = 128.dp
-    val fullSheetHeight = 300.dp
+    // how tall the bottom detail sheet, and animates it sliding open/closed
     val targetSheetHeight = when {
-        fairSpotActive && chosenSpot != null -> if (isSheetExpanded) fullSheetHeight else peekSheetHeight
-        pickedLocation == null -> 0.dp
-        isSheetExpanded -> fullSheetHeight
-        else -> peekSheetHeight
+        fairSpotActive -> if (isSheetExpanded && chosenSpot != null) 300.dp else 128.dp
+        pickedLocation == null -> 0.dp // nothing select so the sheet disappear
+        isSheetExpanded -> 300.dp
+        else -> 128.dp
     }
     val sheetHeight by animateDpAsState(targetValue = targetSheetHeight, label = "sheetHeight")
 
@@ -291,7 +308,7 @@ fun MainScreen(
         ) {
 
         OsmMapView(
-            pickedLocation = pickedLocation,
+            pickedLocation = if (fairSpotActive) chosenSpot else pickedLocation,
             recenterTarget = recenterTarget,
             recenterKey = recenterTrigger,
             recenterZoom = recenterZoom,
@@ -305,7 +322,8 @@ fun MainScreen(
             },
             onMapTap = { latitude, longitude ->
                 focusManager.clearFocus()
-                if (!discoverMode && !fairSpotActive) mapViewModel.pinAt(latitude, longitude)
+                if (fairSpotActive && pickOwnArea) mapViewModel.pickDiscoveredPlace(Location(id = null, name = "Selected spot", lat = latitude, long = longitude, address = ""))
+                else if (!fairSpotActive && !discoverMode) mapViewModel.pinAt(latitude, longitude)
             },
             onMapLongPress = { _, _ ->
                 focusManager.clearFocus()
@@ -377,7 +395,7 @@ fun MainScreen(
         )
 
         FairSpotMapLayer(
-            show = fairSpotActive && !discovering && circleVisible,
+            show = fairSpotActive && !pendingFairSearch && circleVisible,
             circlePos = circleCenter,
             circleDiameter = circleDiameter,
             radiusPx = radiusPx,
@@ -489,13 +507,30 @@ fun MainScreen(
         }
 
         if (!discoverMode && !showFairSpotModal && !fairSpotActive) {
-            FindASpotButton(
-                onClick = { showFairSpotModal = true },
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
                     .padding(bottom = sheetHeight + 12.dp)
-            )
+            ) {
+                BoredSwitchCircle(onToggle = { boredMode = !boredMode })
+                Spacer(Modifier.height(8.dp))
+                FindASpotButton(
+                    boredMode = boredMode,
+                    onClick = {
+                        if (boredMode) {
+                            scope.launch {
+                                val point = currentUserPoint()
+                                if (point != null) factViewModel.loadRandomFact(point.first, point.second)
+                                else android.widget.Toast.makeText(context, "Enable location for nearby facts", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            showFairSpotModal = true
+                        }
+                    }
+                )
+            }
         }
 
         if (fairSpotActive) {
@@ -519,6 +554,7 @@ fun MainScreen(
                     circleCenter = null
                     magicCircleDiscoverViewModel.clearDiscovered()
                 },
+                pickOwnArea = pickOwnArea,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
@@ -552,6 +588,21 @@ fun MainScreen(
                     }
                 },
                 onDismiss = { showFairSpotModal = false }
+            )
+        }
+
+        fact?.let { current ->
+            FactModal(
+                fact = current,
+                onVisit = {
+                    mapViewModel.pick(Location(id = null, name = current.title, lat = current.lat, long = current.long, address = current.description))
+                    recenterInstant = false
+                    recenterZoom = 16.0
+                    recenterTarget = current.lat to current.long
+                    recenterTrigger++
+                    factViewModel.clear()
+                },
+                onDismiss = { factViewModel.clear() }
             )
         }
 

@@ -34,6 +34,7 @@ fun FairSpotSheet(
     loading: Boolean = false,
     circleVisible: Boolean = true,
     onToggleCircle: () -> Unit = {},
+    pickOwnArea: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -45,23 +46,13 @@ fun FairSpotSheet(
             .padding(horizontal = 15.dp)
             .padding(top = 16.dp, bottom = 14.dp)
     ) {
-        if (loading && places.isEmpty()) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "Searching Fair Spot",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                CloseMark(onClose)
-            }
-            return@Column
-        }
+        val title = if (loading && places.isEmpty()) "Searching Fair Spot"
+            else if (pickOwnArea) "Tap a spot or use the circle"
+            else "Tap a fair spot"
 
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "Tap a fair spot",
+                title,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
@@ -69,10 +60,8 @@ fun FairSpotSheet(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-            if (places.isNotEmpty()) {
-                CircleTogglePill(circleVisible, onToggleCircle)
-                Spacer(Modifier.width(8.dp))
-            }
+            CircleTogglePill(circleVisible, onToggleCircle)
+            Spacer(Modifier.width(8.dp))
             CloseMark(onClose)
         }
     }

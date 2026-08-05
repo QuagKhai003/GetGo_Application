@@ -87,6 +87,9 @@ dependencies {
     // Google Places SDK (New) - place discovery via the official SDK
     implementation("com.google.android.libraries.places:places:3.5.0")
 
+    // Coil - async image loading for Compose (Wikidata fact photos)
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
     // composable icon
     implementation("com.composables:icons-material-symbols-outlined-android:2.2.1")
     implementation("com.composables:icons-material-symbols-outlined-filled-android:2.2.1")

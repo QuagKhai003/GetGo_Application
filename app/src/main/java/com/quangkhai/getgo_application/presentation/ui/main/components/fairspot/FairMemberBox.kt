@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 
-// Rounded box shown above the fair-spot sheet after a spot is picked. Lists each
+// Rounded box shown above the place detail sheet after a spot is picked. Lists each
 // member's travel distance, up to 4 per row (FlowRow wraps automatically).
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

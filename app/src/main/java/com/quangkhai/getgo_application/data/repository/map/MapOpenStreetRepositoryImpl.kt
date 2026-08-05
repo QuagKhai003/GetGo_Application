@@ -1,4 +1,4 @@
-package com.quangkhai.getgo_application.data.repository
+package com.quangkhai.getgo_application.data.repository.map
 
 import com.quangkhai.getgo_application.data.network.MapApi
 import com.quangkhai.getgo_application.data.network.client.OpenStreetMapClient

@@ -1,10 +1,10 @@
-package com.quangkhai.getgo_application.data.repository
+package com.quangkhai.getgo_application.data.repository.circlediscovery
 
 import com.quangkhai.getgo_application.data.network.MapApi
 import com.quangkhai.getgo_application.data.network.client.OpenStreetMapClient
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.repository.MagicCircleDiscoverRepository
-import kotlinx.coroutines.delay
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
@@ -36,28 +36,28 @@ class MagicCircleDiscoverRepositoryImpl(
         val safeTerm = sanitizeTerm(term)
         if (safeTerm.isBlank()) return Result.success(emptyList())
 
-        val query = buildOverpassQuery(safeTerm, centerLat, centerLong, radiusMeters)
+        return try {
+            val query = buildOverpassQuery(safeTerm, centerLat, centerLong, radiusMeters)
+            val elements = mapApi.discoverInCircle(query)["elements"]?.jsonArray
 
-        // retry a couple of times for a public Overpass server 504s
-        var lastError: Exception? = null
-        repeat(3) { attempt ->
-            try {
-                val response = mapApi.discoverInCircle(query)
-                val elements = response["elements"]?.jsonArray ?: return Result.success(emptyList())
-                val places = elements
-                    .mapNotNull { it.jsonObject.toLocationOrNull() }
-                    .distinctBy { "${it.name}|${round5(it.lat)}|${round5(it.long)}" }
-                    .sortedBy { distanceKm(centerLat, centerLong, it.lat, it.long) }
-                return Result.success(places)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                lastError = e
-                if (attempt < 2) delay(1200)
+            if (elements != null) {
+                val places = elements.toPlaces(centerLat, centerLong)
+                Result.success(places)
+            } else {
+                Result.success(emptyList())
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(Exception("Something went wrong: \n ${e.message}"))
         }
-        return Result.failure(Exception("Something went wrong: \n ${lastError?.message}"))
     }
+
+    // parse elements into places, drop duplicates, sort nearest-first
+    private fun JsonArray.toPlaces(centerLat: Double, centerLong: Double): List<Location> =
+        mapNotNull { it.jsonObject.toLocationOrNull() }
+            .distinctBy { "${it.name}|${round5Decimal(it.lat)}|${round5Decimal(it.long)}" }
+            .sortedBy { distanceKm(centerLat, centerLong, it.lat, it.long) }
 
     // Claude Opus 4.8 generated code
     // Strip anything that could break out of the QL string / regex literal.
@@ -117,21 +117,13 @@ class MagicCircleDiscoverRepositoryImpl(
             "$type/${this["id"]?.jsonPrimitive?.contentOrNull}"
         }
 
-        return Location(
-            id = id,
-            name = name,
-            lat = lat,
-            long = long,
-            address = address,
-        )
+        return Location(id, name, lat, long, address)
     }
 
-    // Claude Opus 4.8 generated code for collapse near-identical coordinates because it could
-    // - has multiple data record on one coordinate
-    private fun round5(value: Double): Double = (value * 1e5).toLong() / 1e5
+    // collapse near-identical coordinates because slightly more change of coordiante could different data record
+    private fun round5Decimal(value: Double): Double = (value * 1e5).toLong() / 1e5
 
-    // Claude Opus 4.8 generated code for calculating
-    // - straight-line distance in kilometers between two coordinates (for nearest-first sort)
+    // Claude Opus 4.8 generated code for calculating straight-line distance in kilometers between two coordinates (for nearest-first sort)
     private fun distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val r = 6371.0
         val dLat = Math.toRadians(lat2 - lat1)

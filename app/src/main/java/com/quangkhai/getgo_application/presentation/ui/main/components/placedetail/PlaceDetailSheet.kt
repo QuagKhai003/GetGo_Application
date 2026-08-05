@@ -145,6 +145,7 @@ private fun CircleTogglePill(circleVisible: Boolean, onToggleCircle: () -> Unit)
 private fun CoordinatesRow(lat: Double, long: Double) {
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
+    val coords = String.format(java.util.Locale.US, "%.5f, %.5f", lat, long)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -155,7 +156,7 @@ private fun CoordinatesRow(lat: Double, long: Double) {
             Spacer(Modifier.width(8.dp))
             Row(
                 modifier = Modifier.clickable {
-                    scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("coordinates", "$lat, $long"))) }
+                    scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("coordinates", coords))) }
                 },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -165,7 +166,7 @@ private fun CoordinatesRow(lat: Double, long: Double) {
             }
         }
         Text(
-            "$lat, $long",
+            coords,
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold

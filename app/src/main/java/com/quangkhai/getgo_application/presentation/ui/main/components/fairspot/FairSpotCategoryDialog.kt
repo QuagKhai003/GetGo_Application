@@ -35,6 +35,8 @@ import com.quangkhai.getgo_application.presentation.ui.shared.PillButton
 import com.quangkhai.getgo_application.presentation.ui.shared.PillStyle
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 
+
+// Claude Opus 4.8 generated code for open up category for circle search in find a spot button
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FairSpotCategoryDialog(

@@ -83,7 +83,6 @@ class WeatherRepositoryImpl(
         )
     }
 
-    // Claude Opus 4.8 generated code
     // Maps WMO weather codes to a short label.
     // Reference: https://open-meteo.com/en/docs#weather_variable_documentation
     private fun describeWeatherCode(code: Int): String = when (code) {

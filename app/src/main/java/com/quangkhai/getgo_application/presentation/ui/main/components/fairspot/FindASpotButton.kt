@@ -1,4 +1,5 @@
 package com.quangkhai.getgo_application.presentation.ui.main.components.fairspot
+import android.annotation.SuppressLint
 import com.quangkhai.getgo_application.presentation.ui.main.components.map.clickableOverMap
 
 import androidx.compose.foundation.background
@@ -15,10 +16,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 
+@SuppressLint("ModifierParameter")
 @Composable
-fun FindASpotButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun FindASpotButton(boredMode: Boolean = false, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Text(
-        text = "Find A Spot",
+        text = if (boredMode) "I'm Feeling Bored" else "Fair Spot!!!",
         color = MaterialTheme.colorScheme.onSurface,
         fontSize = 14.sp,
         fontWeight = FontWeight.Bold,

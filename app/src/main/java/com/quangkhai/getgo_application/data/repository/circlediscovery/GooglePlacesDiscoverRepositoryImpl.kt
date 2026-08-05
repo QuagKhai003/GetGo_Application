@@ -1,4 +1,4 @@
-package com.quangkhai.getgo_application.data.repository
+package com.quangkhai.getgo_application.data.repository.circlediscovery
 
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
@@ -70,16 +70,16 @@ class GooglePlacesDiscoverRepositoryImpl(
         radiusMeters: Int,
     ): Result<List<Location>> {
         // the categories arrive joined by "|"; map each to a Google place type
-        val types = term.split("|").flatMap { osmToGoogleTypes[it.trim()] ?: emptyList() }.distinct()
-        // guard: nothing to search -> no paid request
-        if (types.isEmpty()) return Result.success(emptyList())
+        val query = term.split("|").map { it.trim() }
+        val types = query.flatMap { osmToGoogleTypes[it.trim()] ?: emptyList() }
+        val dedupeTypes = types.distinct()
 
         return try {
             val request = SearchNearbyRequest.builder(
                 CircularBounds.newInstance(LatLng(centerLat, centerLong), radiusMeters.toDouble()),
                 fields
             )
-                .setIncludedTypes(types)
+                .setIncludedTypes(dedupeTypes)
                 .setMaxResultCount(20)
                 .build()
 
