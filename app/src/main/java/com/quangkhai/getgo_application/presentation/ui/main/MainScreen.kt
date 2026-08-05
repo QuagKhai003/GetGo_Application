@@ -231,9 +231,10 @@ fun MainScreen(
             .collect { mapViewModel.onQueryChange(it) }
     }
 
-    // when a fair-spot search finishes, recenter the map on the circle + snap it to screen centre
+    // when an AUTO fair-spot search finishes, recenter the map on the circle + snap it to screen centre.
+    // skip for pick-your-own-area: the user placed the circle at their own zoom, so leave the map alone.
     LaunchedEffect(discovering) {
-        if (fairSpotActive && !discovering) {
+        if (fairSpotActive && !discovering && !pickOwnArea) {
             fairSearchCenter?.let {
                 recenterTarget = it
                 recenterTrigger++

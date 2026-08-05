@@ -31,6 +31,7 @@ android {
 
         buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL", "")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProperties.getProperty("SUPABASE_ANON_KEY", "")}\"")
+        buildConfigField("String", "GOOGLE_PLACES_API_KEY", "\"${localProperties.getProperty("GOOGLE_PLACES_API_KEY", "")}\"")
     }
 
     buildTypes {
@@ -82,6 +83,9 @@ dependencies {
 
     // device location (FusedLocationProviderClient)
     implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    // Google Places SDK (New) - place discovery via the official SDK
+    implementation("com.google.android.libraries.places:places:3.5.0")
 
     // composable icon
     implementation("com.composables:icons-material-symbols-outlined-android:2.2.1")
