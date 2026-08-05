@@ -1,4 +1,4 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.map
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

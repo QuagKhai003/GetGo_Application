@@ -1,4 +1,5 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.placedetail
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.CopyIcon
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 import androidx.compose.material3.MaterialTheme
 
@@ -67,7 +68,7 @@ fun PlaceDetailSheet(
                         if (total < -30f) onExpandedChange(true)      // dragged up
                         else if (total > 30f) onExpandedChange(false) // dragged down
                     },
-                    onVerticalDrag = { _, dy -> total += dy }
+                    onVerticalDrag = { _, moveY -> total += moveY }
                 )
             }
             .clickable { onExpandedChange(!expanded) }

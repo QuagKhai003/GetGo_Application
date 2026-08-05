@@ -171,9 +171,9 @@ fun AddBillDialog(
                 Spacer(Modifier.width(8.dp))
                 if (canAdd) {
                     PillButton("Add bill", onClick = {
-                        val paidBy = people.mapNotNull { p ->
-                            val v = paid[p]?.toDoubleOrNull() ?: 0.0
-                            if (v > 0) p to v else null
+                        val paidBy = people.mapNotNull { person ->
+                            val amount = paid[person]?.toDoubleOrNull() ?: 0.0
+                            if (amount > 0) person to amount else null
                         }.toMap()
                         val custom = if (equal) emptyMap()
                         else participants.associateWith { shares[it]?.toDoubleOrNull() ?: 0.0 }

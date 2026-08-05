@@ -3,24 +3,13 @@ package com.quangkhai.getgo_application.presentation.ui.main
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
@@ -42,43 +31,32 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.quangkhai.getgo_application.presentation.ui.main.components.BottomRightButtons
-import com.quangkhai.getgo_application.presentation.ui.main.components.DiscoverButton
-import com.quangkhai.getgo_application.presentation.ui.main.components.DiscoverCircle
-import com.quangkhai.getgo_application.presentation.ui.main.components.DiscoverOverlayHost
-import com.quangkhai.getgo_application.presentation.ui.main.components.FairSpotCategoryDialog
-import com.quangkhai.getgo_application.presentation.ui.main.components.FairSpotModal
-import com.quangkhai.getgo_application.presentation.ui.main.components.FairMemberBox
-import com.quangkhai.getgo_application.presentation.ui.main.components.FairSpotSheet
-import com.quangkhai.getgo_application.presentation.ui.main.components.FindASpotButton
-import com.quangkhai.getgo_application.presentation.ui.main.components.FriendListPill
-import com.quangkhai.getgo_application.presentation.ui.main.components.MagicCirclePill
-import com.quangkhai.getgo_application.presentation.ui.main.components.WeatherHistoryDialog
-import com.quangkhai.getgo_application.presentation.ui.main.components.WeatherPill
-import com.quangkhai.getgo_application.presentation.ui.main.components.MapSearchBar
-import com.quangkhai.getgo_application.presentation.ui.main.components.SearchResults
-import com.quangkhai.getgo_application.presentation.ui.main.components.OsmMapView
-import com.quangkhai.getgo_application.presentation.ui.main.components.SearchThisAreaButton
-import com.quangkhai.getgo_application.presentation.ui.main.components.BottomLeftButtons
-import com.quangkhai.getgo_application.presentation.ui.main.components.PlaceDetailSheet
+import com.quangkhai.getgo_application.presentation.ui.main.components.controls.BottomRightButtons
+import com.quangkhai.getgo_application.presentation.ui.main.components.magiccirlce.MagicCircleLayer
+import com.quangkhai.getgo_application.presentation.ui.main.components.fairspot.FairSpotCategoryDialog
+import com.quangkhai.getgo_application.presentation.ui.main.components.fairspot.FairSpotModal
+import com.quangkhai.getgo_application.presentation.ui.main.components.fairspot.FairSpotMapLayer
+import com.quangkhai.getgo_application.presentation.ui.main.components.fairspot.FairSpotSheetLayer
+import com.quangkhai.getgo_application.presentation.ui.main.components.fairspot.FindASpotButton
+import com.quangkhai.getgo_application.presentation.ui.main.components.weather.WeatherHistoryDialog
+import com.quangkhai.getgo_application.presentation.ui.main.components.placedetail.MapAddBillFlow
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.MapTopBar
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.OsmMapView
+import com.quangkhai.getgo_application.presentation.ui.main.components.controls.BottomLeftButtons
+import com.quangkhai.getgo_application.presentation.ui.main.components.placedetail.PlaceDetailSheet
 import com.quangkhai.getgo_application.data.local.getCurrentLatLong
 import com.quangkhai.getgo_application.data.local.hasLocationPermission
 import com.quangkhai.getgo_application.domain.model.BillGroup
 import com.quangkhai.getgo_application.domain.model.Location
-import com.quangkhai.getgo_application.presentation.ui.split.AddBillDialog
-import com.quangkhai.getgo_application.presentation.ui.split.GroupPickerDialog
 import com.quangkhai.getgo_application.domain.usecase.map.CircleDiscoverUseCase
 import com.quangkhai.getgo_application.domain.usecase.map.fairCenter
-import com.quangkhai.getgo_application.domain.usecase.map.haversineMeters
 import com.quangkhai.getgo_application.presentation.viewmodel.CircleDiscoverViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.MapViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.UserViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.WeatherViewModel
-import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -154,7 +132,7 @@ fun MainScreen(
         if (selectedTerms.isEmpty()) return
         discoverTerm = selectedTerms.joinToString("|")
         discoverTrigger++
-        discoverMode = false     // dismiss circle + tooltip, keep result markers
+        discoverMode = false
     }
 
     // Claude Opus 4.8 Generated Code for removing stuck focus on the search upon initial tap
@@ -336,157 +314,88 @@ fun MainScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // top area swaps: search bar + Magic Circle pill OUT, exit ✕ IN
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-        ) {
-            AnimatedVisibility(
-                visible = !discoverMode,
-                enter = slideInVertically { -it } + fadeIn(),
-                exit = slideOutVertically { -it } + fadeOut(),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        MapSearchBar(
-                            state = searchState,
-                            onSearch = { mapViewModel.search(searchState.text.toString()) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            FriendListPill(
-                                friends = currentUser?.friends ?: emptyList(),
-                                checkedIds = checkedFriendIds.toSet(),
-                                onToggle = { friend ->
-                                    friend.id?.let {
-                                        if (it in checkedFriendIds) checkedFriendIds.remove(it)
-                                        else checkedFriendIds.add(it)
-                                    }
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                            MagicCirclePill(onClick = dismiss { enterDiscover() })
-                            WeatherPill(
-                                weather = weather,
-                                onClick = {
-                                    scope.launch {
-                                        getCurrentLatLong(context)?.let { (lat, long) ->
-                                            weatherViewModel.loadHistory(lat, long)
-                                        }
-                                    }
-                                    showWeatherHistory = true
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-
-                    if (searchResults.isNotEmpty()) {
-                        SearchResults(
-                            results = searchResults,
-                            onPickResult = { location ->
-                                mapViewModel.pick(location)
-                                val filledText = if (location.address.isBlank()) location.name
-                                    else "${location.name} - ${location.address}"
-                                searchState.setTextAndPlaceCursorAtEnd(filledText)
-                                isSheetExpanded = false
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 54.dp)
-                        )
+        MapTopBar(
+            searchState = searchState,
+            onSearch = { mapViewModel.search(searchState.text.toString()) },
+            discoverMode = discoverMode,
+            friends = currentUser?.friends ?: emptyList(),
+            checkedIds = checkedFriendIds.toSet(),
+            onToggleFriend = { friend ->
+                friend.id?.let {
+                    if (it in checkedFriendIds) checkedFriendIds.remove(it)
+                    else checkedFriendIds.add(it)
+                }
+            },
+            onEnterDiscover = dismiss { enterDiscover() },
+            onExitDiscover = dismiss { exitDiscover() },
+            weather = weather,
+            onWeatherClick = {
+                scope.launch {
+                    getCurrentLatLong(context)?.let { (lat, long) ->
+                        weatherViewModel.loadHistory(lat, long)
                     }
                 }
-            }
+                showWeatherHistory = true
+            },
+            searchResults = searchResults,
+            onPickResult = { location ->
+                mapViewModel.pick(location)
+                val filledText = if (location.address.isBlank()) location.name
+                    else "${location.name} - ${location.address}"
+                searchState.setTextAndPlaceCursorAtEnd(filledText)
+                isSheetExpanded = false
+            },
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
 
-            AnimatedVisibility(
-                visible = discoverMode,
-                enter = slideInVertically { -it } + fadeIn(),
-                exit = slideOutVertically { -it } + fadeOut(),
-                modifier = Modifier.align(Alignment.TopCenter)
-            ) {
-                DiscoverButton(active = true, onClick = dismiss { exitDiscover() })
-            }
-        }
-
-        val fairCirclePos = circleCenter
-        if (fairSpotActive && !discovering && fairCirclePos != null && circleVisible) {
-            DiscoverCircle(
-                diameter = circleDiameter,
-                isDragging = isDraggingCircle,
-                onDragStart = { isDraggingCircle = true },
-                onDrag = { dx, dy ->
-                    val cur = circleCenter
-                    if (cur != null) {
-                        circleCenter = Offset(
-                            (cur.x + dx).coerceIn(0f, containerSize.width.toFloat()),
-                            (cur.y + dy).coerceIn(0f, containerSize.height.toFloat())
-                        )
-                    }
-                },
-                onDragEnd = {
-                    isDraggingCircle = false
-                },
-                modifier = Modifier.offset {
-                    IntOffset(
-                        (fairCirclePos.x - radiusPx).roundToInt(),
-                        (fairCirclePos.y - radiusPx).roundToInt()
+        FairSpotMapLayer(
+            show = fairSpotActive && !discovering && circleVisible,
+            circlePos = circleCenter,
+            circleDiameter = circleDiameter,
+            radiusPx = radiusPx,
+            isDragging = isDraggingCircle,
+            onDragStart = { isDraggingCircle = true },
+            onDrag = { moveX, moveY ->
+                val cur = circleCenter
+                if (cur != null) {
+                    circleCenter = Offset(
+                        (cur.x + moveX).coerceIn(0f, containerSize.width.toFloat()),
+                        (cur.y + moveY).coerceIn(0f, containerSize.height.toFloat())
                     )
                 }
-            )
-        }
+            },
+            onDragEnd = { isDraggingCircle = false },
+            onSearchArea = {
+                discoverTerm = fairTerms
+                discoverTrigger++
+            }
+        )
 
-        if (fairSpotActive && !discovering && fairCirclePos != null && circleVisible) {
-            SearchThisAreaButton(
-                onClick = {
-                    discoverTerm = fairTerms
-                    discoverTrigger++
-                },
-                modifier = Modifier.offset {
-                    IntOffset(
-                        (fairCirclePos.x - 44.dp.toPx()).roundToInt(),
-                        (fairCirclePos.y + radiusPx + 10.dp.toPx()).roundToInt()
+        MagicCircleLayer(
+            discoverMode = discoverMode,
+            circleCenter = circleCenter,
+            radiusPx = radiusPx,
+            circleDiameter = circleDiameter,
+            isDragging = isDraggingCircle,
+            containerWidth = containerSize.width,
+            selectedTerms = selectedTerms.toSet(),
+            onDragStart = { isDraggingCircle = true },
+            onDrag = { moveX, moveY ->
+                val cur = circleCenter
+                if (cur != null) {
+                    circleCenter = Offset(
+                        (cur.x + moveX).coerceIn(0f, containerSize.width.toFloat()),
+                        (cur.y + moveY).coerceIn(0f, containerSize.height.toFloat())
                     )
                 }
-            )
-        }
-
-        val center = circleCenter
-        if (discoverMode && center != null) {
-            DiscoverOverlayHost(
-                center = center,
-                radiusPx = radiusPx,
-                circleDiameter = circleDiameter,
-                isDragging = isDraggingCircle,
-                onDragStart = { isDraggingCircle = true },
-                onDrag = { dx, dy ->
-                    val current = circleCenter
-                    if (current != null) {
-                        circleCenter = Offset(
-                            (current.x + dx).coerceIn(0f, containerSize.width.toFloat()),
-                            (current.y + dy).coerceIn(0f, containerSize.height.toFloat())
-                        )
-                    }
-                },
-                onDragEnd = { isDraggingCircle = false },
-                containerWidth = containerSize.width,
-                selectedTerms = selectedTerms.toSet(),
-                onToggleTerm = { term ->
-                    if (term in selectedTerms) selectedTerms.remove(term)
-                    else selectedTerms.add(term)
-                },
-                onSearch = { runDiscover() }
-            )
-        }
+            },
+            onDragEnd = { isDraggingCircle = false },
+            onToggleTerm = { term ->
+                if (term in selectedTerms) selectedTerms.remove(term)
+                else selectedTerms.add(term)
+            },
+            onSearch = { runDiscover() }
+        )
 
         if (!fairSpotActive) {
             BottomLeftButtons(
@@ -574,55 +483,28 @@ fun MainScreen(
         }
 
         if (fairSpotActive) {
-            val exitFair = {
-                fairSpotActive = false
-                chosenSpot = null
-                circleCenter = null
-                circleDiscoverViewModel.clearDiscovered()
-            }
-            val spot = chosenSpot
-            if (spot != null) {
-                // after a spot is picked: same as the normal place sheet, plus the circle toggle
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                ) {
-                    FairMemberBox(
-                        distances = tripMembers.map {
-                            it.first to haversineMeters(spot.lat, spot.long, it.second.lat, it.second.long)
-                        },
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                    )
-                    val favorite = currentUser?.favorites?.firstOrNull { it.lat == spot.lat && it.long == spot.long }
-                    PlaceDetailSheet(
-                        location = spot,
-                        expanded = isSheetExpanded,
-                        onExpandedChange = { isSheetExpanded = it },
-                        isFavorite = favorite != null,
-                        onSave = { userViewModel.addFavorite(spot) },
-                        onRemove = { favorite?.id?.let { userViewModel.deleteFavorite(it) } },
-                        onAddBill = { billPlace = spot },
-                        onClose = exitFair,
-                        circleVisible = circleVisible,
-                        onToggleCircle = { circleVisible = !circleVisible },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(sheetHeight)
-                    )
-                }
-            } else {
-                FairSpotSheet(
-                    places = discoveredPlaces,
-                    loading = discovering,
-                    circleVisible = circleVisible,
-                    onToggleCircle = { circleVisible = !circleVisible },
-                    onClose = exitFair,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                )
-            }
+            FairSpotSheetLayer(
+                chosen = chosenSpot,
+                members = tripMembers,
+                places = discoveredPlaces,
+                loading = discovering,
+                circleVisible = circleVisible,
+                expanded = isSheetExpanded,
+                sheetHeight = sheetHeight,
+                favorites = currentUser?.favorites ?: emptyList(),
+                onExpandedChange = { isSheetExpanded = it },
+                onToggleCircle = { circleVisible = !circleVisible },
+                onSaveFavorite = { userViewModel.addFavorite(it) },
+                onRemoveFavorite = { userViewModel.deleteFavorite(it) },
+                onAddBill = { billPlace = it },
+                onClose = {
+                    fairSpotActive = false
+                    chosenSpot = null
+                    circleCenter = null
+                    circleDiscoverViewModel.clearDiscovered()
+                },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
         }
 
@@ -698,30 +580,18 @@ fun MainScreen(
             )
         }
 
-        // "Add bill" from a place sheet: pick a group, then fill the bill (location prefilled)
-        val billLoc = billPlace
-        if (billLoc != null && billGroup == null) {
-            GroupPickerDialog(
-                groups = currentUser?.billGroups ?: emptyList(),
-                onPick = { billGroup = it },
-                onDismiss = { billPlace = null }
-            )
-        }
-        val billGrp = billGroup
-        if (billLoc != null && billGrp != null) {
-            AddBillDialog(
-                people = billGrp.people,
-                location = billLoc,
-                onAdd = { bill ->
-                    userViewModel.updateBillGroup(
-                        billGrp.copy(bills = billGrp.bills + bill.copy(id = java.util.UUID.randomUUID().toString()))
-                    )
-                    billPlace = null
-                    billGroup = null
-                },
-                onDismiss = { billPlace = null; billGroup = null }
-            )
-        }
+        MapAddBillFlow(
+            place = billPlace,
+            group = billGroup,
+            groups = currentUser?.billGroups ?: emptyList(),
+            onPickGroup = { billGroup = it },
+            onAddBill = { g, bill ->
+                userViewModel.updateBillGroup(g.copy(bills = g.bills + bill.copy(id = java.util.UUID.randomUUID().toString())))
+                billPlace = null
+                billGroup = null
+            },
+            onDismiss = { billPlace = null; billGroup = null }
+        )
 
         if (showWeatherHistory) {
             WeatherHistoryDialog(

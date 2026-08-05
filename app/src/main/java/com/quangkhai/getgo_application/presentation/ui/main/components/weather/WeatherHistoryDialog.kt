@@ -1,4 +1,4 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.weather
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

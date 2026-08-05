@@ -3,7 +3,8 @@ package com.quangkhai.getgo_application.domain.usecase.bill
 import com.quangkhai.getgo_application.domain.model.Bill
 import com.quangkhai.getgo_application.domain.model.BillGroup
 
-// each person's position in the group after every bill
+// This whole file is a Claude Opus 4.8 generated code
+// - for calculating the money for split bill feature
 data class PersonBalance(
     val name: String,
     val paid: Double,    // total they fronted across all bills
@@ -55,15 +56,15 @@ object SplitCalculator {
         val backLeft = creditors.map { -it.net }.toMutableList()
 
         val result = mutableListOf<Settlement>()
-        var d = 0
-        var c = 0
-        while (d < debtors.size && c < creditors.size) {
-            val pay = minOf(oweLeft[d], backLeft[c])
-            result.add(Settlement(from = debtors[d].name, to = creditors[c].name, amount = pay))
-            oweLeft[d] -= pay
-            backLeft[c] -= pay
-            if (oweLeft[d] < 0.01) d++
-            if (backLeft[c] < 0.01) c++
+        var debtorIndex = 0
+        var creditorIndex = 0
+        while (debtorIndex < debtors.size && creditorIndex < creditors.size) {
+            val pay = minOf(oweLeft[debtorIndex], backLeft[creditorIndex])
+            result.add(Settlement(from = debtors[debtorIndex].name, to = creditors[creditorIndex].name, amount = pay))
+            oweLeft[debtorIndex] -= pay
+            backLeft[creditorIndex] -= pay
+            if (oweLeft[debtorIndex] < 0.01) debtorIndex++
+            if (backLeft[creditorIndex] < 0.01) creditorIndex++
         }
         return result
     }

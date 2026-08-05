@@ -1,4 +1,6 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.controls
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.FourSquareIcon
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.clickableOverMap
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

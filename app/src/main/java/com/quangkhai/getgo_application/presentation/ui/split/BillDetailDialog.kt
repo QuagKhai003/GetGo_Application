@@ -31,9 +31,9 @@ import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 @Composable
 fun BillDetailDialog(bill: Bill, onDismiss: () -> Unit) {
     val shares = SplitCalculator.sharesForBill(bill)
-    val locationText = bill.location?.let { loc ->
-        val label = loc.address.ifBlank { loc.name }
-        "$label - ${loc.lat}, ${loc.long}"
+    val locationText = bill.location?.let { location ->
+        val label = location.address.ifBlank { location.name }
+        "$label - ${location.lat}, ${location.long}"
     } ?: "—"
 
     Dialog(onDismissRequest = onDismiss) {

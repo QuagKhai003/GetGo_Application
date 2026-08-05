@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.quangkhai.getgo_application.domain.model.Weather
-import com.quangkhai.getgo_application.presentation.ui.main.components.weatherEmoji
+import com.quangkhai.getgo_application.presentation.ui.main.components.weather.weatherEmoji
 import com.quangkhai.getgo_application.ui.theme.GetGo_ApplicationTheme
 
 

@@ -6,7 +6,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-// straight-line (as-the-crow-flies) distance between two coordinates, in metres
+// Claude Opus 4.8 generated code for calculating a distance between two coordinates in metres
 fun haversineMeters(lat1: Double, long1: Double, lat2: Double, long2: Double): Double {
     val earthRadius = 6371000.0
     val dLat = Math.toRadians(lat2 - lat1)
@@ -16,11 +16,10 @@ fun haversineMeters(lat1: Double, long1: Double, lat2: Double, long2: Double): D
     return 2 * earthRadius * asin(sqrt(a))
 }
 
+// Claude Opus 4.8 generated code for calculating a fair centre point of whole list friend
 // the fair meeting centre = centre of the smallest circle that encloses everyone
-// (minimises the WORST member's travel). Computed on lat/long in a metre-scaled
+// computed on lat/long in a metre-scaled
 // plane (longitude * cos(lat)). Uses the Badoiu-Clarkson iterative shrinking method,
-// which is robust for any group size (the old pair/triple brute force was numerically
-// broken for 4+ members and ~12% of 3-member cases).
 fun fairCenter(points: List<Pair<Double, Double>>): Pair<Double, Double> {
     if (points.isEmpty()) return 0.0 to 0.0
     if (points.size == 1) return points[0]

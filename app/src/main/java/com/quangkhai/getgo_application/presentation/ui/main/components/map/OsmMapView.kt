@@ -1,4 +1,4 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.map
 
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -88,7 +88,7 @@ fun OsmMapView(
         }
     }
 
-    // Tap receiver: dots are tiny, so a tap doesn't have to land exactly on a dot.
+    // Claude Opus 4.8 generated code for making a tap (inaccurate) on dot into a pre-existed dot on map
     // Pick the nearest discovered place within ~40dp; otherwise treat it as a map tap.
     DisposableEffect(Unit) {
         val events = MapEventsOverlay(object : MapEventsReceiver {

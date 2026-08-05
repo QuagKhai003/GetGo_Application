@@ -1,4 +1,5 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.friendlist
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.clickableOverMap
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background

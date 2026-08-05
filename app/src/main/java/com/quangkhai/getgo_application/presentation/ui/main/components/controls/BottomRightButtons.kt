@@ -1,4 +1,4 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.controls
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +18,6 @@ fun BottomRightButtons(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         GetCurLocationButton(onClick = onLocate)
-        DirectionsButton(onClick = onDirections, active = directionsActive)
+        RoutingButton(onClick = onDirections, active = directionsActive)
     }
 }

@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.quangkhai.getgo_application.data.local.getCurrentLatLong
 import com.quangkhai.getgo_application.data.local.hasLocationPermission
-import com.quangkhai.getgo_application.presentation.ui.main.components.WeatherHistoryDialog
+import com.quangkhai.getgo_application.presentation.ui.main.components.weather.WeatherHistoryDialog
 import com.quangkhai.getgo_application.presentation.viewmodel.WeatherViewModel
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 import com.quangkhai.getgo_application.ui.theme.GetGo_ApplicationTheme

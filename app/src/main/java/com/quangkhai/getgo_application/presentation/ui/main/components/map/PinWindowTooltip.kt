@@ -1,4 +1,4 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.map
 
 import android.content.Context
 import android.graphics.Color

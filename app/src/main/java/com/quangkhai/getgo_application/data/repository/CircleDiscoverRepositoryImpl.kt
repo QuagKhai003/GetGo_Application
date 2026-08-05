@@ -22,9 +22,6 @@ class CircleDiscoverRepositoryImpl(
     private val mapApi: MapApi = OpenStreetMapClient.mapOverpassApi
 
 ) : CircleDiscoverRepository {
-
-    // OSM tag keys we search for the term. Only tag-indexed keys — NOT "name"
-    // (name is unindexed; regex-scanning it makes the public Overpass 504).
     private val searchKeys = listOf("amenity", "shop", "leisure")
 
     // cap on returned elements so a dense area does not flood the map
@@ -41,7 +38,7 @@ class CircleDiscoverRepositoryImpl(
 
         val query = buildOverpassQuery(safeTerm, centerLat, centerLong, radiusMeters)
 
-        // the public Overpass server 504s at random under load - retry a couple of times
+        // retry a couple of times for a public Overpass server 504s
         var lastError: Exception? = null
         repeat(3) { attempt ->
             try {
@@ -62,15 +59,14 @@ class CircleDiscoverRepositoryImpl(
         return Result.failure(Exception("Something went wrong: \n ${lastError?.message}"))
     }
 
+    // Claude Opus 4.8 generated code
     // Strip anything that could break out of the QL string / regex literal.
     // Keeps letters, digits, spaces, dashes and the `|` alternation.
     private fun sanitizeTerm(term: String): String =
         term.filter { it.isLetterOrDigit() || it == ' ' || it == '-' || it == '|' }
             .trim()
 
-    // [out:json][timeout:25];
-    // ( nwr(around:R,LAT,LON)["amenity"~"TERM",i]; ... );
-    // out center LIMIT;
+    // Claude Opus 4.8 generated code for build Overpass API query
     private fun buildOverpassQuery(
         term: String,
         lat: Double,
@@ -90,6 +86,7 @@ class CircleDiscoverRepositoryImpl(
         """.trimIndent()
     }
 
+    // Claude Opus 4.8 generated code
     // One Overpass element -> Location. Nodes carry lat/lon; ways/relations carry "center".
     // The matched category (amenity/shop/...) is kept in Location.address.
     private fun JsonObject.toLocationOrNull(): Location? {
@@ -132,9 +129,12 @@ class CircleDiscoverRepositoryImpl(
         )
     }
 
+    // Claude Opus 4.8 generated code for collapse near-identical coordinates because it could
+    // - has multiple data record on one coordinate
     private fun round5(value: Double): Double = (value * 1e5).toLong() / 1e5
 
-    // straight-line distance in kilometers between two coordinates (for nearest-first sort)
+    // Claude Opus 4.8 generated code for calculating
+    // - straight-line distance in kilometers between two coordinates (for nearest-first sort)
     private fun distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val r = 6371.0
         val dLat = Math.toRadians(lat2 - lat1)

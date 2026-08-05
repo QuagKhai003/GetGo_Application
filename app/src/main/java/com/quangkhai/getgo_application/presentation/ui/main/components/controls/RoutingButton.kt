@@ -1,4 +1,6 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.controls
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.DirectionsIcon
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.clickableOverMap
 import androidx.compose.material3.MaterialTheme
 
 import androidx.compose.foundation.background
@@ -18,7 +20,7 @@ import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 
 // bottom-right directions button. When a route is drawn it turns into a red ✕ that removes it.
 @Composable
-fun DirectionsButton(
+fun RoutingButton(
     onClick: () -> Unit,
     active: Boolean = false,
     modifier: Modifier = Modifier

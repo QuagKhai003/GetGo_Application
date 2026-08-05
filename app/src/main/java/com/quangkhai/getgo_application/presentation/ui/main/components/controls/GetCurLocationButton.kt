@@ -1,4 +1,6 @@
-package com.quangkhai.getgo_application.presentation.ui.main.components
+package com.quangkhai.getgo_application.presentation.ui.main.components.controls
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.MyLocationIcon
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.clickableOverMap
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 import androidx.compose.material3.MaterialTheme
 

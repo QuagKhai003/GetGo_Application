@@ -41,9 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.quangkhai.getgo_application.domain.model.Location
-import com.quangkhai.getgo_application.presentation.ui.main.components.MapSearchBar
-import com.quangkhai.getgo_application.presentation.ui.main.components.SearchResults
-import com.quangkhai.getgo_application.presentation.ui.main.components.OsmMapView
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.MapSearchBar
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.SearchResults
+import com.quangkhai.getgo_application.presentation.ui.main.components.map.OsmMapView
 import com.quangkhai.getgo_application.presentation.ui.shared.PillButton
 import com.quangkhai.getgo_application.presentation.viewmodel.MapViewModel
 
