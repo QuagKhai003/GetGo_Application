@@ -14,7 +14,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.coroutines.cancellation.CancellationException
 
 // Google Geocoding version of address/coordinate lookup. Same contract as the OSM one,
-// Adapted Claude Opus 4.8 for fater migration
+// Adapted Claude Opus 4.8 for faster migration
 // so it swaps in by changing which impl the MapViewModel constructs. Paid + needs a key.
 class GoogleMapRepositoryImpl(
     private val geocodeApi: GoogleGeocodeApi = GoogleGeocodeClient.geocodeApi
