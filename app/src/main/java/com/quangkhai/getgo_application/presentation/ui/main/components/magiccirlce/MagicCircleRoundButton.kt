@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.dp
 import com.quangkhai.getgo_application.presentation.ui.main.components.map.clickableOverMap
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 
-// Round on/off button for the magic circle. Off = pin icon; on = red ✕ to turn it off.
+// magic circle round button for exiting the magic circle discovery mode
 @Composable
-fun MagicCircleButton(
+fun MagicCircleRoundButton(
     active: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier

@@ -4,8 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
 
-// The magic-circle discovery overlay: the draggable circle + its category tooltip.
-// Shown only while discover mode is on.
+// The magic-circle discovery overlay
 @Composable
 fun MagicCircleLayer(
     discoverMode: Boolean,

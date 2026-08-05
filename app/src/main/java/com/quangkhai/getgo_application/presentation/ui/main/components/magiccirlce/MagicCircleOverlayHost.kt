@@ -11,8 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.quangkhai.getgo_application.domain.usecase.map.CircleDiscoverUseCase
 import kotlin.math.roundToInt
 
-// Puts the circle on the map, and — when the user isn't dragging — the category
-// tooltip just below it.
+// Puts the circle on the map
 @Composable
 fun MagicCircleOverlayHost(
     center: Offset,

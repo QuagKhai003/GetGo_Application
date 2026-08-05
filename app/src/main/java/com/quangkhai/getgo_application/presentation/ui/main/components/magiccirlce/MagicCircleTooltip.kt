@@ -34,7 +34,7 @@ import com.quangkhai.getgo_application.domain.usecase.map.DiscoverCategory
 import com.quangkhai.getgo_application.presentation.ui.main.components.map.clickableOverMap
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 
-// The category card that drops down under the circle: a small caret, a scrolling list
+// The category card that drops down under the circle - a scrolling list
 // of place-type checkboxes, and the Discover button that runs the search.
 @Composable
 fun MagicCircleTooltip(

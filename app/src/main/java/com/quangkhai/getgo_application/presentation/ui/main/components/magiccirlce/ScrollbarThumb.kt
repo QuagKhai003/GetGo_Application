@@ -18,9 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 import kotlin.math.roundToInt
 
-// Thin scrollbar on the right edge of a scroll area. Appears only when the list is
-// taller than the visible area. Call it inside the Box that holds the scroller.
-// trackHeightPx = height of that visible area in pixels.
+// Thin scrollbar on the right edge of a scroll area.
 @Composable
 fun BoxScope.ScrollbarThumb(scroll: ScrollState, trackHeightPx: Float) {
     if (scroll.maxValue <= 0) return

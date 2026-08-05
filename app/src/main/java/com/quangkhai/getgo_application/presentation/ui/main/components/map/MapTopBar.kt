@@ -1,5 +1,5 @@
 package com.quangkhai.getgo_application.presentation.ui.main.components.map
-import com.quangkhai.getgo_application.presentation.ui.main.components.magiccirlce.MagicCircleButton
+import com.quangkhai.getgo_application.presentation.ui.main.components.magiccirlce.MagicCircleRoundButton
 import com.quangkhai.getgo_application.presentation.ui.main.components.friendlist.FriendListPill
 import com.quangkhai.getgo_application.presentation.ui.main.components.magiccirlce.MagicCirclePill
 import com.quangkhai.getgo_application.presentation.ui.main.components.weather.WeatherPill
@@ -103,7 +103,7 @@ fun MapTopBar(
             exit = slideOutVertically { -it } + fadeOut(),
             modifier = Modifier.align(Alignment.TopCenter)
         ) {
-            MagicCircleButton(active = true, onClick = onExitDiscover)
+            MagicCircleRoundButton(active = true, onClick = onExitDiscover)
         }
     }
 }
