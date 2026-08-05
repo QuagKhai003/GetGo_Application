@@ -22,7 +22,7 @@ class WeatherViewModel : ViewModel() {
     private val _weather = MutableStateFlow<Weather?>(null)
     val weather: StateFlow<Weather?> = _weather.asStateFlow()
 
-    // recent daily history (last week + today) at the last loaded coordinate
+    // recent weather history (last week + today) at the last loaded coordinate
     private val _history = MutableStateFlow<List<DayWeather>>(emptyList())
     val history: StateFlow<List<DayWeather>> = _history.asStateFlow()
 

@@ -1,19 +1,20 @@
 package com.quangkhai.getgo_application.data.local
 
 import android.content.Context
+import androidx.core.content.edit
 
 // remembers the logged in user id across app restarts (SharedPreferences)
 class SessionManager(context: Context) {
 
-    private val prefs = context.getSharedPreferences("getgo_session", Context.MODE_PRIVATE)
+    private val userSession = context.getSharedPreferences("getgo_session", Context.MODE_PRIVATE)
 
     fun saveUserId(userId: String) {
-        prefs.edit().putString("user_id", userId).apply()
+        userSession.edit { putString("user_id", userId) }
     }
 
-    fun getUserId(): String? = prefs.getString("user_id", null)
+    fun getUserId(): String? = userSession.getString("user_id", null)
 
     fun clear() {
-        prefs.edit().clear().apply()
+        userSession.edit { clear() }
     }
 }

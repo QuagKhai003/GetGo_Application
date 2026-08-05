@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class DiscoverViewModel : ViewModel() {
+class CircleDiscoverViewModel : ViewModel() {
 
     private val discoverRepository = CircleDiscoverRepositoryImpl()
     private val circleDiscoverUseCase = CircleDiscoverUseCase(discoverRepository)

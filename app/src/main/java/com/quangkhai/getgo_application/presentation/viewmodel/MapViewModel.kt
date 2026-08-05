@@ -25,33 +25,40 @@ import kotlin.time.Duration.Companion.milliseconds
 @OptIn(FlowPreview::class)
 class MapViewModel : ViewModel() {
 
+    // Open Street Map Repository Implementation
     private val mapRepository = MapOpenStreetRepositoryImpl()
     private val searchByAddressUseCase = SearchByAddressUseCase(mapRepository)
     private val searchByCoordinateUseCase = SearchByCoordinateUseCase(mapRepository)
 
+    // Search response from two use case search by address or coordinates
+    private val _searchResults = MutableStateFlow<List<Location>>(emptyList())
+    val searchResults: StateFlow<List<Location>> = _searchResults.asStateFlow()
+
+    // Weather Repository Implementation
     private val weatherRepository = WeatherRepositoryImpl()
     private val getWeatherUseCase = GetWeatherUseCase(weatherRepository)
 
+    // Weather response from usecase
+    private val _weather = MutableStateFlow<Weather?>(null)
+    val weather: StateFlow<Weather?> = _weather.asStateFlow()
+
+    // Routing Repository Implementation
     private val routeRepository = RouteRepositoryImpl()
     private val getRouteUseCase = GetRouteUseCase(routeRepository)
 
-    // the road route to draw (current location -> destination), empty when none
-    private val _route = MutableStateFlow<List<Pair<Double, Double>>>(emptyList())
-    val route: StateFlow<List<Pair<Double, Double>>> = _route.asStateFlow()
+    // the road route to draw (current location -> destination)
+    private val _routePath = MutableStateFlow<List<Pair<Double, Double>>>(emptyList())
+    val routePath: StateFlow<List<Pair<Double, Double>>> = _routePath.asStateFlow()
 
-    private val _searchResults = MutableStateFlow<List<Location>>(emptyList())
-    val searchResults: StateFlow<List<Location>> = _searchResults.asStateFlow()
 
     private val _pickedLocation = MutableStateFlow<Location?>(null)
     val pickedLocation: StateFlow<Location?> = _pickedLocation.asStateFlow()
 
-    private val _weather = MutableStateFlow<Weather?>(null)
-    val weather: StateFlow<Weather?> = _weather.asStateFlow()
 
     // what the user is currently typing
     private val _query = MutableStateFlow("")
 
-    // set when a result is picked: the text we auto-fill must not re-open the list
+    // set the placeholder equal to a picked location result and no re-open the list
     private var suppressNextSearch = false
 
     // the user's region (from device location); used to prefer nearby results
@@ -66,11 +73,12 @@ class MapViewModel : ViewModel() {
         "${lon - 0.4},${lat + 0.4},${lon + 0.4},${lat - 0.4}"
     }
 
+    // Claude Opus 4.8 Generated Code to detect a stop from user to send search location request
     init {
         // live search: run a moment AFTER the user stops typing, so ~1 request/second limit is not hit
         viewModelScope.launch {
             _query
-                .debounce(400.milliseconds)
+                .debounce(300.milliseconds)
                 .map { it.trim() }
                 .distinctUntilChanged()
                 .collectLatest { query ->
@@ -83,12 +91,12 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    // called on every keystroke -> debounced live search
+    // called on every keystroke to change the text on search bar (live search)
     fun onQueryChange(text: String) {
         _query.value = text
     }
 
-    // immediate search (the keyboard Search action)
+    // immediate search when get enter from android keyboard
     fun search(query: String) {
         viewModelScope.launch { runSearch(query) }
     }
@@ -124,9 +132,9 @@ class MapViewModel : ViewModel() {
         fetchWeather(location.lat, location.long)
     }
 
-    // user tapped a discovered POI marker: keep its name, but resolve the real
-    // street address (the discovered Location only carries the OSM category).
-    fun pickDiscovered(place: Location) {
+    // user tapped a discovered location marker
+    // map the location coordinate to real name on map
+    fun pickDiscoveredPlace(place: Location) {
         _pickedLocation.value = place            // show immediately with the POI name
         fetchWeather(place.lat, place.long)
         viewModelScope.launch {
@@ -148,12 +156,12 @@ class MapViewModel : ViewModel() {
     // fetch + draw the driving route from current location to a destination
     fun fetchRoute(fromLat: Double, fromLong: Double, toLat: Double, toLong: Double) {
         viewModelScope.launch {
-            _route.value = getRouteUseCase(fromLat, fromLong, toLat, toLong).getOrNull() ?: emptyList()
+            _routePath.value = getRouteUseCase(fromLat, fromLong, toLat, toLong).getOrNull() ?: emptyList()
         }
     }
 
     fun clearRoute() {
-        _route.value = emptyList()
+        _routePath.value = emptyList()
     }
 
     // User drags the pin and then it convert the coordinate to address by searchByCoordinateUseCase
@@ -167,7 +175,7 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    // fetch current weather for a coordinate; silent on failure (weather is auxiliary)
+    // fetch current weather for a coordinate; silent on failure
     private fun fetchWeather(lat: Double, long: Double) {
         viewModelScope.launch {
             _weather.value = getWeatherUseCase(lat, long).getOrNull()
