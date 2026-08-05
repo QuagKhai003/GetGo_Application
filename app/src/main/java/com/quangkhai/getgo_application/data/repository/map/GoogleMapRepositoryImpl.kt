@@ -14,6 +14,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.coroutines.cancellation.CancellationException
 
 // Google Geocoding version of address/coordinate lookup. Same contract as the OSM one,
+// Adapted Claude Opus 4.8 for fater migration
 // so it swaps in by changing which impl the MapViewModel constructs. Paid + needs a key.
 class GoogleMapRepositoryImpl(
     private val geocodeApi: GoogleGeocodeApi = GoogleGeocodeClient.geocodeApi
@@ -51,10 +52,13 @@ class GoogleMapRepositoryImpl(
         val long = location["lng"]?.jsonPrimitive?.doubleOrNull ?: return null
 
         val address = this["formatted_address"]?.jsonPrimitive?.contentOrNull ?: ""
-        // Geocoding has no POI name; use the first part of the address as the short name
-        val name = address.substringBefore(",").ifBlank { address }
+        // Google packs "POI name - street" in the first comma-segment; split so the
+        // name is just the POI and the address starts at the street (no duplicate).
+        val firstPart = address.substringBefore(",")
+        val name = firstPart.substringBefore(" - ").ifBlank { address }
+        val shortAddress = if (firstPart.contains(" - ")) address.removePrefix("$name - ") else address
         val id = this["place_id"]?.jsonPrimitive?.contentOrNull
 
-        return Location(id = id, name = name, lat = lat, long = long, address = address)
+        return Location(id = id, name = name, lat = lat, long = long, address = shortAddress)
     }
 }
