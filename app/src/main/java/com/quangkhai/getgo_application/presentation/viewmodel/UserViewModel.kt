@@ -21,7 +21,7 @@ import com.quangkhai.getgo_application.domain.usecase.user.friend.SearchFriendUs
 import com.quangkhai.getgo_application.domain.usecase.user.friend.UpdateFriendLocationUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.location.AddLocationUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.location.DeleteLocationUseCase
-import com.quangkhai.getgo_application.domain.usecase.user.location.GetLocationsUseCase
+import com.quangkhai.getgo_application.domain.usecase.user.location.GetLocationUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.location.UpdateLocationUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.CreateUserUseCase
 import com.quangkhai.getgo_application.domain.usecase.user.DeleteUserUseCase
@@ -46,6 +46,7 @@ class UserViewModel : ViewModel() {
     private val updateUserUseCase = UpdateUserUseCase(userRepository)
     private val searchFriendUseCase = SearchFriendUseCase()
 
+    private val getLocationUseCase = GetLocationUseCase(userRepository)
     private val addLocationUseCase = AddLocationUseCase(userRepository)
     private val updateLocationUseCase = UpdateLocationUseCase(userRepository)
     private val deleteLocationUseCase = DeleteLocationUseCase(userRepository)
@@ -57,7 +58,6 @@ class UserViewModel : ViewModel() {
     private val updateFriendLocationUseCase = UpdateFriendLocationUseCase(userRepository)
     private val deleteFriendUseCase = DeleteFriendUseCase(userRepository)
 
-    private val getLocationsUseCase = GetLocationsUseCase(userRepository)
     private val getFavoritesUseCase = GetFavoritesUseCase(userRepository)
     private val getFriendsUseCase = GetFriendsUseCase(userRepository)
 
@@ -91,13 +91,13 @@ class UserViewModel : ViewModel() {
 
             val loadedUser = userResult.getOrNull() ?: return@launch
 
-            val locations = getLocationsUseCase(loadedUser).getOrNull() ?: emptyList()
+            val savedLocation = getLocationUseCase(loadedUser).getOrNull()
             val favorites = getFavoritesUseCase(loadedUser).getOrNull() ?: emptyList()
             val friends = getFriendsUseCase(loadedUser).getOrNull() ?: emptyList()
             val billGroups = getBillGroupsUseCase(loadedUser).getOrNull() ?: emptyList()
 
             val fullUser = loadedUser.copy(
-                myLocations = locations,
+                location = savedLocation,
                 favorites = favorites,
                 friends = friends,
                 billGroups = billGroups
@@ -298,7 +298,7 @@ class UserViewModel : ViewModel() {
         val name = location.name.ifBlank { location.address }
 
         if (pendingMyAddress) {
-            val existing = _currentUser.value?.myLocations?.firstOrNull()
+            val existing = _currentUser.value?.location
             if (existing != null) {
                 updateLocation(existing.copy(name = name, lat = location.lat, long = location.long, address = location.address))
             } else {
@@ -319,8 +319,6 @@ class UserViewModel : ViewModel() {
         _currentUser.value = null
         _friendResults.value = emptyList()
     }
-
-    // ------------------------------------------
 
     private suspend fun handleUserResult(result: Result<User>) {
         if (result.isSuccess) {

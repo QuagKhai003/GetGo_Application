@@ -3,7 +3,7 @@ package com.quangkhai.getgo_application.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.quangkhai.getgo_application.data.repository.MapOpenStreetRepositoryImpl
-import com.quangkhai.getgo_application.data.repository.RouteRepositoryImpl
+import com.quangkhai.getgo_application.data.repository.LocationPathRouteRepositoryImpl
 import com.quangkhai.getgo_application.data.repository.WeatherRepositoryImpl
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.model.Weather
@@ -43,7 +43,7 @@ class MapViewModel : ViewModel() {
     val weather: StateFlow<Weather?> = _weather.asStateFlow()
 
     // Routing Repository Implementation
-    private val routeRepository = RouteRepositoryImpl()
+    private val routeRepository = LocationPathRouteRepositoryImpl()
     private val getRouteUseCase = GetRouteUseCase(routeRepository)
 
     // the road route to draw (current location -> destination)

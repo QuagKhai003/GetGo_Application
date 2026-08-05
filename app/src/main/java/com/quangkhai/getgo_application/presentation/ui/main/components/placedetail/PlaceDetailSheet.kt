@@ -22,15 +22,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.quangkhai.getgo_application.domain.model.Location
+import android.content.ClipData
+import kotlinx.coroutines.launch
 
 /**
  * The place sheet, anchored to the bottom of the screen. Its height is animated
@@ -140,7 +143,8 @@ private fun CircleTogglePill(circleVisible: Boolean, onToggleCircle: () -> Unit)
 
 @Composable
 private fun CoordinatesRow(lat: Double, long: Double) {
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -150,7 +154,9 @@ private fun CoordinatesRow(lat: Double, long: Double) {
             Text("Coordinates", color = GetGoTheme.colors.labelColor, fontSize = 13.sp)
             Spacer(Modifier.width(8.dp))
             Row(
-                modifier = Modifier.clickable { clipboard.setText(AnnotatedString("$lat, $long")) },
+                modifier = Modifier.clickable {
+                    scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("coordinates", "$lat, $long"))) }
+                },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CopyIcon(tint = GetGoTheme.colors.fillElements, modifier = Modifier.size(13.dp))

@@ -122,7 +122,7 @@ fun UserSettingScreen(
                     SettingRow(
                         emoji = "📍",
                         label = "Your address",
-                        trailing = user?.myLocations?.firstOrNull()?.address ?: "—",
+                        trailing = user?.location?.address ?: "—",
                         onClick = {
                             userViewModel.startSetMyAddress()
                             showPicker = true

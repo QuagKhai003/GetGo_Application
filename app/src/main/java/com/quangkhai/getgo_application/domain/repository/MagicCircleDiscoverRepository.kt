@@ -2,7 +2,7 @@ package com.quangkhai.getgo_application.domain.repository
 
 import com.quangkhai.getgo_application.domain.model.Location
 
-interface CircleDiscoverRepository {
+interface MagicCircleDiscoverRepository {
 
     // Find all places matching selected options inside a circle.
     suspend fun discoverPlaces(

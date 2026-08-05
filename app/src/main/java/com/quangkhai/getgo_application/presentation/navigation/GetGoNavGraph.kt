@@ -13,12 +13,12 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.quangkhai.getgo_application.data.local.SessionManager
+import com.quangkhai.getgo_application.data.local.PrefManager
 import com.quangkhai.getgo_application.presentation.ui.auth.LoginScreen
 import com.quangkhai.getgo_application.presentation.ui.auth.RegisterScreen
 import com.quangkhai.getgo_application.presentation.ui.main.MainScreen
 import com.quangkhai.getgo_application.presentation.ui.menu.MenuScreen
-import com.quangkhai.getgo_application.presentation.ui.intro.SplashScreen
+import com.quangkhai.getgo_application.presentation.ui.intro.IntroScreen
 import com.quangkhai.getgo_application.presentation.ui.friend.FriendListScreen
 import com.quangkhai.getgo_application.presentation.ui.setting.UserSettingScreen
 import com.quangkhai.getgo_application.presentation.ui.split.BillGroupScreen
@@ -29,7 +29,7 @@ import com.quangkhai.getgo_application.presentation.viewmodel.UserViewModel
 @Composable
 fun GetGoNavGraph(navController: NavHostController) {
     val context = LocalContext.current
-    val session = remember { SessionManager(context) }
+    val session = remember { PrefManager(context) }
     val userViewModel: UserViewModel = viewModel()
 
     // start on the map/menu if a user is remembered, otherwise ask them to log in
@@ -87,7 +87,7 @@ fun GetGoNavGraph(navController: NavHostController) {
             LaunchedEffect(Unit) {
                 session.getUserId()?.let { userViewModel.loadUser(it) }
             }
-            SplashScreen(
+            IntroScreen(
                 onDone = {
                     navController.navigate(GetGoRoute.Menu.route) {
                         popUpTo(GetGoRoute.Splash.route) { inclusive = true }

@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 // intro screen: shows for 1 second, then onDone() moves on to the menu
 @Composable
-fun SplashScreen(onDone: () -> Unit) {
+fun IntroScreen(onDone: () -> Unit) {
     LaunchedEffect(Unit) {
         delay(1200.milliseconds)
         onDone()

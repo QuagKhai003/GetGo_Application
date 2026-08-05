@@ -20,8 +20,8 @@ interface UserRepository {
     suspend fun updateFriendLocation(userId: String, friendId: String, friend: Friend): Result<Unit>
     suspend fun deleteFriend(userId: String, friendId: String): Result<Unit>
 
-    // Saved Location CRUD Functions
-    suspend fun getLocations(userId: String): Result<List<Location>>
+    // Location CRUD Functions
+    suspend fun getLocation(userId: String): Result<Location?>
     suspend fun addLocation(userId: String, location: Location): Result<Unit>
     suspend fun updateLocation(userId: String, locationId: String, location: Location): Result<Unit>
     suspend fun deleteLocation(userId: String, locationId: String): Result<Unit>

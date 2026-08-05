@@ -18,7 +18,7 @@ import com.quangkhai.getgo_application.R
 import com.quangkhai.getgo_application.domain.model.Location
 import com.quangkhai.getgo_application.domain.usecase.map.haversineMeters
 import com.quangkhai.getgo_application.presentation.ui.shared.favoriteStarDrawable
-import com.quangkhai.getgo_application.presentation.ui.shared.quaternaryCircleDotDrawable
+import com.quangkhai.getgo_application.presentation.ui.shared.colorCircleDotDrawable
 import com.quangkhai.getgo_application.ui.theme.GetGoTheme
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -61,8 +61,6 @@ fun OsmMapView(
     onFavoriteTap: (Location) -> Unit = {},
     fairSpot: Location? = null,
     fairSpotLines: List<Location> = emptyList(),
-    fitPoints: List<Pair<Double, Double>> = emptyList(),
-    fitKey: Int = 0,
     routePoints: List<Pair<Double, Double>> = emptyList(),
     modifier: Modifier = Modifier
 ) {
@@ -152,7 +150,7 @@ fun OsmMapView(
     // markers for the toggled saved places (favorites / friends / my locations)
     val savedMarkers = remember { mutableListOf<Marker>() }
 
-    val savedDot = quaternaryCircleDotDrawable(context, GetGoTheme.colors.quaternary.toArgb())
+    val savedDot = colorCircleDotDrawable(context, GetGoTheme.colors.quaternary.toArgb())
 
     // markers for the toggled favorite places (star icon)
     val favoriteMarkers = remember { mutableListOf<Marker>() }
@@ -184,13 +182,6 @@ fun OsmMapView(
         }
     }
 
-    // zoom/pan so all given points (chosen spot + members) fit on screen
-    LaunchedEffect(fitKey) {
-        if (fitKey == 0 || fitPoints.size < 2) return@LaunchedEffect
-        val box = BoundingBox.fromGeoPoints(fitPoints.map { GeoPoint(it.first, it.second) })
-        mapView.zoomToBoundingBox(box, true, 140)
-    }
-
     LaunchedEffect(recenterKey) {
         if (recenterKey == 0) return@LaunchedEffect
         recenterTarget?.let { (latitude, longitude) ->
@@ -206,7 +197,12 @@ fun OsmMapView(
         resultMarkers.forEach { mapView.overlays.remove(it) }
         resultMarkers.clear()
 
-        val dot = ContextCompat.getDrawable(context, R.drawable.ic_place_dot)
+        val dot = colorCircleDotDrawable(
+            context,
+            fillColor = android.graphics.Color.parseColor("#0091EA"),
+            borderColor = android.graphics.Color.WHITE,
+            sizeDp = 18
+        )
         discoverPlaces.forEach { place ->
             val marker = Marker(mapView).apply {
                 position = GeoPoint(place.lat, place.long)

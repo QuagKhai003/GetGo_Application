@@ -2,9 +2,9 @@ package com.quangkhai.getgo_application.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.quangkhai.getgo_application.data.repository.CircleDiscoverRepositoryImpl
+import com.quangkhai.getgo_application.data.repository.MagicCircleDiscoverRepositoryImpl
 import com.quangkhai.getgo_application.domain.model.Location
-import com.quangkhai.getgo_application.domain.usecase.map.CircleDiscoverUseCase
+import com.quangkhai.getgo_application.domain.usecase.map.MagicCircleDiscoverUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class CircleDiscoverViewModel : ViewModel() {
+class MagicCircleDiscoverViewModel : ViewModel() {
 
-    private val discoverRepository = CircleDiscoverRepositoryImpl()
-    private val circleDiscoverUseCase = CircleDiscoverUseCase(discoverRepository)
+    private val magicCircleDiscoverRepository = MagicCircleDiscoverRepositoryImpl()
+    private val magicCircleDiscoverUseCase = MagicCircleDiscoverUseCase(magicCircleDiscoverRepository)
 
     private val _discoveredPlaces = MutableStateFlow<List<Location>>(emptyList())
     val discoveredPlaces: StateFlow<List<Location>> = _discoveredPlaces.asStateFlow()
@@ -38,7 +38,7 @@ class CircleDiscoverViewModel : ViewModel() {
             _lastError.value = null
             _discoveredPlaces.value = emptyList()
             try {
-                val result = circleDiscoverUseCase(query, centerLat, centerLong, radiusMeters)
+                val result = magicCircleDiscoverUseCase(query, centerLat, centerLong, radiusMeters)
                 if (result.isSuccess) {
                     val places = result.getOrNull() ?: emptyList()
                     _discovering.value = false

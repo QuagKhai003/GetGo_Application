@@ -15,4 +15,10 @@ data class Weather(
 
     // human-readable label mapped from weatherCode (WMO code)
     val description: String,
+
+    // timestamp of the reading from the API, e.g. "2026-08-05T15:00"
+    val time: String = "",
+
+    // place name from the API timezone, e.g. "Ho Chi Minh"
+    val place: String = "",
 )

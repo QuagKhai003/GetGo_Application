@@ -8,7 +8,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.quangkhai.getgo_application.domain.usecase.map.CircleDiscoverUseCase
+import com.quangkhai.getgo_application.domain.usecase.map.MagicCircleDiscoverUseCase
 import kotlin.math.roundToInt
 
 // Puts the circle on the map
@@ -49,7 +49,7 @@ fun MagicCircleOverlayHost(
         val tooltipY = center.y + radiusPx + gapPx
 
         MagicCircleTooltip(
-            categories = CircleDiscoverUseCase.CATEGORIES,
+            categories = MagicCircleDiscoverUseCase.CATEGORIES,
             selectedTerms = selectedTerms,
             onToggle = onToggleTerm,
             onSearch = onSearch,

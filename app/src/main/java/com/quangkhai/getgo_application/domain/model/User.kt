@@ -13,7 +13,7 @@ data class User (
 
     var password: String,
 
-    val myLocations: List<Location> = emptyList(),
+    val location: Location? = null,
 
     val friends: List<Friend> = emptyList(),
 

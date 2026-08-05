@@ -12,9 +12,7 @@ class AddLocationUseCase(private val userRepository: UserRepository) {
 
         if (result.isSuccess) {
             // saved on the server, so build the updated user for the screen
-            val updatedLocations = user.myLocations + location
-            val updatedUser = user.copy(myLocations = updatedLocations)
-            return Result.success(updatedUser)
+            return Result.success(user.copy(location = location))
         } else {
             // saving failed - pass the same error up
             val error = result.exceptionOrNull() ?: Exception("Unknown error")

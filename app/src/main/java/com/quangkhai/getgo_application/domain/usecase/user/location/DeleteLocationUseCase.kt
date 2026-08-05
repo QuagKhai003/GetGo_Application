@@ -10,8 +10,7 @@ class DeleteLocationUseCase(private val userRepository: UserRepository) {
         val result = userRepository.deleteLocation(uid, locationId)
 
         if (result.isSuccess) {
-            val updatedLocations = user.myLocations.filter { it.id != locationId }
-            return Result.success(user.copy(myLocations = updatedLocations))
+            return Result.success(user.copy(location = null))
         } else {
             val error = result.exceptionOrNull() ?: Exception("Unknown error")
             return Result.failure(error)

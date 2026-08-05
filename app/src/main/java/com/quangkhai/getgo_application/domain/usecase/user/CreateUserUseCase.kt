@@ -22,7 +22,7 @@ class CreateUserUseCase(private val userRepository: UserRepository) {
             name = name,
             username = username,
             password = password,
-            myLocations = emptyList(),
+            location = null,
             friends = emptyList(),
             favorites = emptyList()
         )

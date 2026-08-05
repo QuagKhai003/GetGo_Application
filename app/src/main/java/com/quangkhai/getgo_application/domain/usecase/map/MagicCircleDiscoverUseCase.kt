@@ -1,12 +1,12 @@
 package com.quangkhai.getgo_application.domain.usecase.map
 
 import com.quangkhai.getgo_application.domain.model.Location
-import com.quangkhai.getgo_application.domain.repository.CircleDiscoverRepository
+import com.quangkhai.getgo_application.domain.repository.MagicCircleDiscoverRepository
 
 // Selectable discovery category class for option in checklist
 data class DiscoverCategory(val label: String, val term: String)
 
-class CircleDiscoverUseCase(private val circleDiscoverRepository: CircleDiscoverRepository) {
+class MagicCircleDiscoverUseCase(private val magicCircleDiscoverRepository: MagicCircleDiscoverRepository) {
 
     suspend operator fun invoke(
         query: String,
@@ -24,7 +24,7 @@ class CircleDiscoverUseCase(private val circleDiscoverRepository: CircleDiscover
         // clamp radius to a sane band (Overpass around: is meters)
         val radius = radiusMeters.coerceIn(100, 5000)
 
-        return circleDiscoverRepository.discoverPlaces(
+        return magicCircleDiscoverRepository.discoverPlaces(
             term = trimmed,
             centerLat = centerLat,
             centerLong = centerLong,

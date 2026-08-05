@@ -3,7 +3,7 @@ package com.quangkhai.getgo_application.data.repository
 import com.quangkhai.getgo_application.data.network.MapApi
 import com.quangkhai.getgo_application.data.network.client.OpenStreetMapClient
 import com.quangkhai.getgo_application.domain.model.Location
-import com.quangkhai.getgo_application.domain.repository.CircleDiscoverRepository
+import com.quangkhai.getgo_application.domain.repository.MagicCircleDiscoverRepository
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -18,10 +18,10 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class CircleDiscoverRepositoryImpl(
+class MagicCircleDiscoverRepositoryImpl(
     private val mapApi: MapApi = OpenStreetMapClient.mapOverpassApi
 
-) : CircleDiscoverRepository {
+) : MagicCircleDiscoverRepository {
     private val searchKeys = listOf("amenity", "shop", "leisure")
 
     // cap on returned elements so a dense area does not flood the map
@@ -61,7 +61,6 @@ class CircleDiscoverRepositoryImpl(
 
     // Claude Opus 4.8 generated code
     // Strip anything that could break out of the QL string / regex literal.
-    // Keeps letters, digits, spaces, dashes and the `|` alternation.
     private fun sanitizeTerm(term: String): String =
         term.filter { it.isLetterOrDigit() || it == ' ' || it == '-' || it == '|' }
             .trim()
@@ -87,8 +86,6 @@ class CircleDiscoverRepositoryImpl(
     }
 
     // Claude Opus 4.8 generated code for converting raw Json response from Overpass API to a location
-    // One Overpass element -> Location. Nodes carry lat/lon; ways/relations carry "center".
-    // The matched category (amenity/shop/...) is kept in Location.address.
     private fun JsonObject.toLocationOrNull(): Location? {
         val lat = this["lat"]?.jsonPrimitive?.doubleOrNull
             ?: this["center"]?.jsonObject?.get("lat")?.jsonPrimitive?.doubleOrNull

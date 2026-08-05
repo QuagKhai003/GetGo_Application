@@ -5,7 +5,7 @@ import com.quangkhai.getgo_application.domain.model.User
 import com.quangkhai.getgo_application.domain.repository.UserRepository
 
 /**
- * Edits one saved location (rename "Home", move the pin, ...).
+ * Edits the user's saved location (rename, move the pin, ...).
  * It must already exist on the server, so it must already have an id.
  */
 class UpdateLocationUseCase(private val userRepository: UserRepository) {
@@ -16,11 +16,7 @@ class UpdateLocationUseCase(private val userRepository: UserRepository) {
         val result = userRepository.updateLocation(uid, locationId, location)
 
         if (result.isSuccess) {
-            // swap the old version out of the list, keep the order
-            val updatedLocations = user.myLocations.map { old ->
-                if (old.id == locationId) location else old
-            }
-            return Result.success(user.copy(myLocations = updatedLocations))
+            return Result.success(user.copy(location = location))
         } else {
             val error = result.exceptionOrNull() ?: Exception("Unknown error")
             return Result.failure(error)

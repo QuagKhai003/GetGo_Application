@@ -47,13 +47,14 @@ import com.quangkhai.getgo_application.presentation.ui.main.components.map.MapTo
 import com.quangkhai.getgo_application.presentation.ui.main.components.map.OsmMapView
 import com.quangkhai.getgo_application.presentation.ui.main.components.controls.BottomLeftButtons
 import com.quangkhai.getgo_application.presentation.ui.main.components.placedetail.PlaceDetailSheet
+import com.quangkhai.getgo_application.data.local.PrefManager
 import com.quangkhai.getgo_application.data.local.getCurrentLatLong
 import com.quangkhai.getgo_application.data.local.hasLocationPermission
 import com.quangkhai.getgo_application.domain.model.BillGroup
 import com.quangkhai.getgo_application.domain.model.Location
-import com.quangkhai.getgo_application.domain.usecase.map.CircleDiscoverUseCase
+import com.quangkhai.getgo_application.domain.usecase.map.MagicCircleDiscoverUseCase
 import com.quangkhai.getgo_application.domain.usecase.map.fairCenter
-import com.quangkhai.getgo_application.presentation.viewmodel.CircleDiscoverViewModel
+import com.quangkhai.getgo_application.presentation.viewmodel.MagicCircleDiscoverViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.MapViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.UserViewModel
 import com.quangkhai.getgo_application.presentation.viewmodel.WeatherViewModel
@@ -67,25 +68,28 @@ import kotlinx.coroutines.launch
 fun MainScreen(
     onHome: () -> Unit = {},
     mapViewModel: MapViewModel = viewModel(),
-    circleDiscoverViewModel: CircleDiscoverViewModel = viewModel(),
+    magicCircleDiscoverViewModel: MagicCircleDiscoverViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     weatherViewModel: WeatherViewModel = viewModel()
 ) {
     val searchResults by mapViewModel.searchResults.collectAsState()
     val pickedLocation by mapViewModel.pickedLocation.collectAsState()
     val route by mapViewModel.routePath.collectAsState()
-    val discoveredPlaces by circleDiscoverViewModel.discoveredPlaces.collectAsState()
-    val discovering by circleDiscoverViewModel.discovering.collectAsState()
+    val discoveredPlaces by magicCircleDiscoverViewModel.discoveredPlaces.collectAsState()
+    val discovering by magicCircleDiscoverViewModel.discovering.collectAsState()
     val weather by weatherViewModel.weather.collectAsState()
     val weatherHistory by weatherViewModel.history.collectAsState()
     val currentUser by userViewModel.currentUser.collectAsState()
 
     val searchState = rememberTextFieldState()
+    val context = LocalContext.current
+    val prefs = remember { PrefManager(context) }
     var isMenuOpen by remember { mutableStateOf(false) }
     var isSheetExpanded by remember { mutableStateOf(false) }
     var favoritesActive by remember { mutableStateOf(false) }
-    var myLocationActive by remember { mutableStateOf(false) }
-    val checkedFriendIds = remember { mutableStateListOf<String>() }
+    // remembered across app restarts via PrefManager
+    var myLocationActive by remember { mutableStateOf(prefs.getMyLocationActive()) }
+    val checkedFriendIds = remember { mutableStateListOf<String>().apply { addAll(prefs.getCheckedFriends()) } }
     var showFairSpotModal by remember { mutableStateOf(false) }
     var showCategoryDialog by remember { mutableStateOf(false) }
     var fairSpotActive by remember { mutableStateOf(false) }
@@ -99,8 +103,6 @@ fun MainScreen(
     var recenterZoom by remember { mutableStateOf(16.0) }
     var recenterInstant by remember { mutableStateOf(false) }
     var pendingFairSearch by remember { mutableStateOf(false) }
-    var fitPoints by remember { mutableStateOf<List<Pair<Double, Double>>>(emptyList()) }
-    var fitKey by remember { mutableIntStateOf(0) }
     // "add bill from map": the place to bill, and the group chosen to add it to
     var billPlace by remember { mutableStateOf<Location?>(null) }
     var billGroup by remember { mutableStateOf<BillGroup?>(null) }
@@ -117,11 +119,23 @@ fun MainScreen(
     var isDraggingCircle by remember { mutableStateOf(false) }
     val selectedTerms = remember { mutableStateListOf<String>() }
 
+    // shared circle-drag handlers (used by both the fair-spot and magic-circle layers)
+    val startCircleDrag = { isDraggingCircle = true }
+    val endCircleDrag = { isDraggingCircle = false }
+    val moveCircle: (Float, Float) -> Unit = { moveX, moveY ->
+        val cur = circleCenter
+        if (cur != null) {
+            circleCenter = Offset(
+                (cur.x + moveX).coerceIn(0f, containerSize.width.toFloat()),
+                (cur.y + moveY).coerceIn(0f, containerSize.height.toFloat())
+            )
+        }
+    }
+
     val density = LocalDensity.current
     val radiusPx = with(density) { (120.dp).toPx() }
     val circleDiameter = (120.dp) * 2
 
-    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
     var recenterTarget by remember { mutableStateOf<Pair<Double, Double>?>(null) }
@@ -143,12 +157,12 @@ fun MainScreen(
         selectedTerms.clear()
         circleCenter = Offset(containerSize.width / 2f, containerSize.height / 2f)
         isDraggingCircle = false
-        circleDiscoverViewModel.clearDiscovered()
+        magicCircleDiscoverViewModel.clearDiscovered()
     }
 
     fun exitDiscover() {
         discoverMode = false
-        circleDiscoverViewModel.clearDiscovered()
+        magicCircleDiscoverViewModel.clearDiscovered()
     }
 
     fun locateUser(recenter: Boolean) {
@@ -171,9 +185,23 @@ fun MainScreen(
                 recenterTarget = currentLocation
                 recenterTrigger++
                 mapViewModel.pinAt(currentLocation.first, currentLocation.second)
+
+                // turn on the "my location" marker toggle automatically
+                myLocationActive = true
+                prefs.saveMyLocationActive(true)
+
+                // save the location once as a fallback if the user has none yet.
+                // updating it later is done from the profile (set location + picker).
+                if (currentUser?.location == null) {
+                    userViewModel.addLocation("My location", currentLocation.first, currentLocation.second, "")
+                }
             }
         }
     }
+
+    // the user's live device location; falls back to their saved location if GPS is unavailable
+    suspend fun currentUserPoint(): Pair<Double, Double>? =
+        getCurrentLatLong(context) ?: currentUser?.location?.let { it.lat to it.long }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -229,7 +257,7 @@ fun MainScreen(
         val list = mutableListOf<Location>()
         val checkedFriends = (currentUser?.friends ?: emptyList()).filter { it.id != null && it.id in checkedFriendIds }
         list.addAll(checkedFriends.map { it.location })
-        if (myLocationActive) list.addAll(currentUser?.myLocations ?: emptyList())
+        if (myLocationActive) currentUser?.location?.let { list.add(it) }
         list.filter { it.lat != 0.0 || it.long != 0.0 }
     }
 
@@ -290,7 +318,7 @@ fun MainScreen(
             discoverTrigger = discoverTrigger,
             overrideSearchCenter = searchCenterOverride,
             onDiscoverArea = { latitude, longitude, radiusMeters ->
-                circleDiscoverViewModel.discover(discoverTerm, latitude, longitude, radiusMeters)
+                magicCircleDiscoverViewModel.discover(discoverTerm, latitude, longitude, radiusMeters)
                 if (fairSpotActive) fairSearchCenter = latitude to longitude
                 searchCenterOverride = null
             },
@@ -308,8 +336,6 @@ fun MainScreen(
             onFavoriteTap = { location -> focusManager.clearFocus(); if (!fairSpotActive) mapViewModel.pick(location) },
             fairSpot = chosenSpot,
             fairSpotLines = if (chosenSpot != null) tripMembers.map { it.second } else emptyList(),
-            fitPoints = fitPoints,
-            fitKey = fitKey,
             routePoints = route,
             modifier = Modifier.fillMaxSize()
         )
@@ -324,6 +350,7 @@ fun MainScreen(
                 friend.id?.let {
                     if (it in checkedFriendIds) checkedFriendIds.remove(it)
                     else checkedFriendIds.add(it)
+                    prefs.saveCheckedFriends(checkedFriendIds.toSet())
                 }
             },
             onEnterDiscover = dismiss { enterDiscover() },
@@ -354,17 +381,9 @@ fun MainScreen(
             circleDiameter = circleDiameter,
             radiusPx = radiusPx,
             isDragging = isDraggingCircle,
-            onDragStart = { isDraggingCircle = true },
-            onDrag = { moveX, moveY ->
-                val cur = circleCenter
-                if (cur != null) {
-                    circleCenter = Offset(
-                        (cur.x + moveX).coerceIn(0f, containerSize.width.toFloat()),
-                        (cur.y + moveY).coerceIn(0f, containerSize.height.toFloat())
-                    )
-                }
-            },
-            onDragEnd = { isDraggingCircle = false },
+            onDragStart = startCircleDrag,
+            onDrag = moveCircle,
+            onDragEnd = endCircleDrag,
             onSearchArea = {
                 discoverTerm = fairTerms
                 discoverTrigger++
@@ -379,17 +398,9 @@ fun MainScreen(
             isDragging = isDraggingCircle,
             containerWidth = containerSize.width,
             selectedTerms = selectedTerms.toSet(),
-            onDragStart = { isDraggingCircle = true },
-            onDrag = { moveX, moveY ->
-                val cur = circleCenter
-                if (cur != null) {
-                    circleCenter = Offset(
-                        (cur.x + moveX).coerceIn(0f, containerSize.width.toFloat()),
-                        (cur.y + moveY).coerceIn(0f, containerSize.height.toFloat())
-                    )
-                }
-            },
-            onDragEnd = { isDraggingCircle = false },
+            onDragStart = startCircleDrag,
+            onDrag = moveCircle,
+            onDragEnd = endCircleDrag,
             onToggleTerm = { term ->
                 if (term in selectedTerms) selectedTerms.remove(term)
                 else selectedTerms.add(term)
@@ -405,7 +416,7 @@ fun MainScreen(
                 favoritesActive = favoritesActive,
                 onFavoritesChange = { favoritesActive = it },
                 myLocationActive = myLocationActive,
-                onMyLocationChange = { myLocationActive = it },
+                onMyLocationChange = { myLocationActive = it; prefs.saveMyLocationActive(it) },
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .navigationBarsPadding()
@@ -426,21 +437,25 @@ fun MainScreen(
                         // a route is drawn -> the ✕ removes it
                         mapViewModel.clearRoute()
                     } else {
-                        // route from the user's saved location to the pin (or chosen fair spot)
+                        // route from the user's live location to the pin (or chosen fair spot)
                         val dest = if (fairSpotActive) chosenSpot else pickedLocation
-                        val from = currentUser?.myLocations?.firstOrNull()
                         if (dest == null) {
                             android.widget.Toast.makeText(context, "Pick a location on the map first", android.widget.Toast.LENGTH_SHORT).show()
-                        } else if (from == null) {
-                            android.widget.Toast.makeText(context, "Set your saved location first", android.widget.Toast.LENGTH_SHORT).show()
                         } else {
-                            if (fairSpotActive) {
-                                fairSpotActive = false
-                                chosenSpot = null
-                                circleCenter = null
-                                circleDiscoverViewModel.clearDiscovered()
+                            scope.launch {
+                                val from = currentUserPoint()
+                                if (from == null) {
+                                    android.widget.Toast.makeText(context, "Couldn't get your location. Enable location to get directions.", android.widget.Toast.LENGTH_SHORT).show()
+                                } else {
+                                    if (fairSpotActive) {
+                                        fairSpotActive = false
+                                        chosenSpot = null
+                                        circleCenter = null
+                                        magicCircleDiscoverViewModel.clearDiscovered()
+                                    }
+                                    mapViewModel.fetchRoute(from.first, from.second, dest.lat, dest.long)
+                                }
                             }
-                            mapViewModel.fetchRoute(from.lat, from.long, dest.lat, dest.long)
                         }
                     }
                 },
@@ -501,7 +516,7 @@ fun MainScreen(
                     fairSpotActive = false
                     chosenSpot = null
                     circleCenter = null
-                    circleDiscoverViewModel.clearDiscovered()
+                    magicCircleDiscoverViewModel.clearDiscovered()
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
@@ -541,7 +556,7 @@ fun MainScreen(
 
         if (showCategoryDialog) {
             FairSpotCategoryDialog(
-                categories = CircleDiscoverUseCase.CATEGORIES,
+                categories = MagicCircleDiscoverUseCase.CATEGORIES,
                 onConfirm = { terms ->
                     showCategoryDialog = false
                     mapViewModel.clearPicked()
@@ -553,26 +568,28 @@ fun MainScreen(
                     isDraggingCircle = false
                     circleVisible = true
 
-                    // members for the spider lines (checked friends + you)
-                    val myPoint = currentUser?.myLocations?.firstOrNull()?.let { it.lat to it.long }
-                    userLocation = myPoint
+                    // members for the spider lines (checked friends + you) - "you" is the live location
+                    scope.launch {
+                        val myPoint = currentUserPoint()
+                        userLocation = myPoint
 
-                    if (!pickOwnArea) {
-                        // auto fair centre: recenter there and search exactly the circle we draw
-                        // (via the live projection in onDiscoverArea) so the two always match.
-                        // zoom 15 makes the fixed-size circle ~1 km across
-                        val friendPoints = (currentUser?.friends ?: emptyList())
-                            .filter { it.id != null && it.id in checkedFriendIds }
-                            .map { it.location.lat to it.location.long }
-                        val points = friendPoints + listOfNotNull(myPoint)
-                        val center = fairCenter(points)
-                        fairSearchCenter = center
-                        searchCenterOverride = center
-                        recenterInstant = true
-                        recenterZoom = 15.0
-                        recenterTarget = center
-                        recenterTrigger++
-                        pendingFairSearch = true
+                        if (!pickOwnArea) {
+                            // auto fair centre: recenter there and search exactly the circle we draw
+                            // (via the live projection in onDiscoverArea) so the two always match.
+                            // zoom 15 makes the fixed-size circle ~1 km across
+                            val friendPoints = (currentUser?.friends ?: emptyList())
+                                .filter { it.id != null && it.id in checkedFriendIds }
+                                .map { it.location.lat to it.location.long }
+                            val points = friendPoints + listOfNotNull(myPoint)
+                            val center = fairCenter(points)
+                            fairSearchCenter = center
+                            searchCenterOverride = center
+                            recenterInstant = true
+                            recenterZoom = 15.0
+                            recenterTarget = center
+                            recenterTrigger++
+                            pendingFairSearch = true
+                        }
                     }
                     // pickOwnArea: leave the circle at screen centre - user drags it + taps "Search area"
                 },

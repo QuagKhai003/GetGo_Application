@@ -175,13 +175,14 @@ class UserSupabaseRepositoryImpl() : UserRepository {
 
     // Saved Location CRUD Functions---------------
 
-    override suspend fun getLocations(userId: String): Result<List<Location>> {
+    override suspend fun getLocation(userId: String): Result<Location?> {
         return try {
-            val locations = supaDB.from("locations")
+            val location = supaDB.from("locations")
                 .select { filter { eq("user_id", userId) } }
                 .decodeList<Location>()
+                .firstOrNull()
 
-            Result.success(locations)
+            Result.success(location)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -289,7 +290,6 @@ class UserSupabaseRepositoryImpl() : UserRepository {
     }
 
     // Bill Group CRUD Functions-------------------
-    // one "bill_groups" row per group; people + bills stored as JSON columns
 
     override suspend fun getBillGroups(userId: String): Result<List<BillGroup>> {
         return try {

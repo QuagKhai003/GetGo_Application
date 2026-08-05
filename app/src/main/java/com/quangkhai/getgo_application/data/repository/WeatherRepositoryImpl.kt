@@ -6,6 +6,7 @@ import com.quangkhai.getgo_application.domain.model.DayWeather
 import com.quangkhai.getgo_application.domain.model.Weather
 import com.quangkhai.getgo_application.domain.repository.WeatherRepository
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
@@ -40,7 +41,7 @@ class WeatherRepositoryImpl(
         }
     }
 
-    // the daily arrays come back column-wise (time[], max[], min[], code[]) - zip them by index
+    // Convert the json reposne to list of weather days
     private fun JsonObject.toDailyList(): List<DayWeather> {
         val daily = this["daily"]?.jsonObject ?: return emptyList()
         val times = daily["time"]?.jsonArray ?: return emptyList()
@@ -67,12 +68,18 @@ class WeatherRepositoryImpl(
         val current = this["current"]?.jsonObject
         val code = current?.get("weather_code")?.jsonPrimitive?.intOrNull ?: -1
 
+        // "Asia/Ho_Chi_Minh" -> "Ho Chi Minh"
+        val timezone = this["timezone"]?.jsonPrimitive?.contentOrNull ?: ""
+        val place = timezone.substringAfterLast("/").replace("_", " ")
+
         return Weather(
             temperatureC = current?.get("temperature_2m")?.jsonPrimitive?.doubleOrNull ?: 0.0,
             humidity = current?.get("relative_humidity_2m")?.jsonPrimitive?.intOrNull ?: 0,
             windSpeedKmh = current?.get("wind_speed_10m")?.jsonPrimitive?.doubleOrNull ?: 0.0,
             weatherCode = code,
             description = describeWeatherCode(code),
+            time = current?.get("time")?.jsonPrimitive?.contentOrNull ?: "",
+            place = place,
         )
     }
 

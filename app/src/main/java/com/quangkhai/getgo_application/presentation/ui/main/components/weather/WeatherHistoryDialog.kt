@@ -44,8 +44,9 @@ fun WeatherHistoryDialog(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                val place = weather?.place ?: ""
                 Text(
-                    "Weather here",
+                    if (place.isNotBlank()) "Weather - $place" else "Weather here",
                     color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -61,8 +62,10 @@ fun WeatherHistoryDialog(
             }
 
             if (weather != null) {
+                val hour = prettyHour(weather.time)
                 Text(
-                    "${weatherEmoji(weather.weatherCode)}  ${weather.temperatureC.toInt()}°C · ${weather.description}",
+                    "${weatherEmoji(weather.weatherCode)}  ${weather.temperatureC.toInt()}°C · ${weather.description}" +
+                        if (hour.isNotEmpty()) " · $hour" else "",
                     color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium
@@ -101,4 +104,10 @@ fun WeatherHistoryDialog(
 private fun prettyDate(iso: String): String {
     val parts = iso.split("-")
     return if (parts.size == 3) "${parts[2]}/${parts[1]}" else iso
+}
+
+// "2026-08-05T15:00" -> "15:00"
+private fun prettyHour(iso: String): String {
+    val time = iso.substringAfter("T", "")
+    return if (time.length >= 5) time.substring(0, 5) else ""
 }

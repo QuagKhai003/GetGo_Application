@@ -1,7 +1,6 @@
 package com.quangkhai.getgo_application.domain.repository
 
 import com.quangkhai.getgo_application.domain.model.Location
-import com.quangkhai.getgo_application.domain.model.MapNode
 
 interface MapRepository {
 
