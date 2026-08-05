@@ -60,8 +60,10 @@ fun FairSpotSheet(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-            CircleTogglePill(circleVisible, onToggleCircle)
-            Spacer(Modifier.width(8.dp))
+            if (pickOwnArea || places.isNotEmpty()) {
+                CircleTogglePill(circleVisible, onToggleCircle)
+                Spacer(Modifier.width(8.dp))
+            }
             CloseMark(onClose)
         }
     }
