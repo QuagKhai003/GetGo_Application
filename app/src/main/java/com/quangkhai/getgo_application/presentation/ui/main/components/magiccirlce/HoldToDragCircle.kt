@@ -9,8 +9,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import kotlin.math.hypot
 
-// Drag from anywhere inside the circle to move it, without the map panning underneath.
-// A plain tap (no real movement) is left untouched so it still reaches the pins below.
+// Drag from anywhere inside the circle to move it, without the map panning underneath
 fun Modifier.holdToDragCircle(
     onDragStart: () -> Unit,
     onDrag: (moveX: Float, moveY: Float) -> Unit,
