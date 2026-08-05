@@ -24,7 +24,7 @@ fun BoredSwitchCircle(onToggle: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(24.dp)
+            .size(32.dp)
             .clip(CircleShape)
             .background(Color.Gray)
             .clickableOverMap { onToggle() }
@@ -33,7 +33,7 @@ fun BoredSwitchCircle(onToggle: () -> Unit, modifier: Modifier = Modifier) {
             painter = painterResource(R.drawable.baseline_swap_horiz_24),
             contentDescription = "switch mode",
             tint = Color.White,
-            modifier = Modifier.size(10.dp)
+            modifier = Modifier.size(15.dp)
         )
     }
 }
