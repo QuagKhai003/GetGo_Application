@@ -86,7 +86,7 @@ class CircleDiscoverRepositoryImpl(
         """.trimIndent()
     }
 
-    // Claude Opus 4.8 generated code
+    // Claude Opus 4.8 generated code for converting raw Json response from Overpass API to a location
     // One Overpass element -> Location. Nodes carry lat/lon; ways/relations carry "center".
     // The matched category (amenity/shop/...) is kept in Location.address.
     private fun JsonObject.toLocationOrNull(): Location? {
