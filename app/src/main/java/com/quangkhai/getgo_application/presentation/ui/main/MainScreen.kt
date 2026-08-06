@@ -478,12 +478,12 @@ fun MainScreen(
                         }
                     }
                 },
-                directionsActive = route.isNotEmpty(),
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .navigationBarsPadding()
                     .padding(end = 14.dp)
-                    .padding(bottom = sheetHeight + 12.dp)
+                    .padding(bottom = sheetHeight + 12.dp),
+                directionsActive = route.isNotEmpty(),
             )
         }
 

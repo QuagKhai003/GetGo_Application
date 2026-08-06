@@ -10,8 +10,9 @@ import androidx.compose.ui.unit.dp
 fun BottomRightButtons(
     onLocate: () -> Unit,
     onDirections: () -> Unit,
-    directionsActive: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    directionsActive: Boolean = false
+
 ) {
     Column(
         modifier = modifier,
