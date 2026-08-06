@@ -1,18 +1,18 @@
-package com.quangkhai.getgo_application.data.repository
+package com.quangkhai.getgo_application.data.repository.route
 
 import com.quangkhai.getgo_application.data.network.LocationPathRouteApi
 import com.quangkhai.getgo_application.data.network.client.OpenStreetRouteClient
-import com.quangkhai.getgo_application.domain.repository.LocationPathRouteRepository
+import com.quangkhai.getgo_application.domain.repository.RoutePathRepository
+import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.double
 import kotlin.coroutines.cancellation.CancellationException
 
 // Uses the free public OSRM router. Returns the road geometry as (lat, long) points.
-class LocationPathRouteRepositoryImpl(
+class OpenStreetRoutePathRepositoryImpl(
     private val routeApi: LocationPathRouteApi = OpenStreetRouteClient.routeApi
-) : LocationPathRouteRepository {
+) : RoutePathRepository {
 
     override suspend fun getRoute(
         fromLat: Double,

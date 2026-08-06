@@ -1,8 +1,8 @@
 package com.quangkhai.getgo_application.domain.usecase.map
 
-import com.quangkhai.getgo_application.domain.repository.LocationPathRouteRepository
+import com.quangkhai.getgo_application.domain.repository.RoutePathRepository
 
-class GetRouteUseCase(private val routeRepository: LocationPathRouteRepository) {
+class GetRouteUseCase(private val routeRepository: RoutePathRepository) {
     suspend operator fun invoke(
         fromLat: Double,
         fromLong: Double,

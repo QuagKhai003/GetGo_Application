@@ -395,7 +395,7 @@ fun MainScreen(
         )
 
         FairSpotMapLayer(
-            show = fairSpotActive && !pendingFairSearch && circleVisible && (pickOwnArea || !discovering),
+            show = fairSpotActive && !pendingFairSearch && circleVisible && (pickOwnArea || discoveredPlaces.isNotEmpty()),
             circlePos = circleCenter,
             circleDiameter = circleDiameter,
             radiusPx = radiusPx,
